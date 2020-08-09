@@ -1,0 +1,13 @@
+.jumbotron input{
+    width: inherit
+}
+
+body {
+    padding-top: 55px;
+}
+
+.table-bordered td, 
+.table-bordered th,
+.table thead th {
+    border: 2px solid white;
+}

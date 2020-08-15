@@ -3,7 +3,7 @@ const config = {
     "port": "8080",
     "rest" : {
         "size" : "",
-        "type" : "",
+        "type" : "/getpackagetype",
         "time" : "",
         "transport" : "",
         "city" : "",
@@ -11,6 +11,5 @@ const config = {
         "checkPrice" : "",
         "sendShipping": "",
         "shippingInformation": "",
-        "ejemplo": "/sendmessage"
     }
 };

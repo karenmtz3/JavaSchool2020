@@ -7,15 +7,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 public class WebController {
 
     private WebService webService;
 
-    @GetMapping("/sendmessage")
-    public ResponseEntity<String> getPackages(){
-        webService.sendRequest();
-        return new ResponseEntity("send", HttpStatus.OK);
+    @GetMapping("/getpackagetype")
+    public ResponseEntity<List<String>> getPackagesType(){
+        return new ResponseEntity(webService.getPackagesTypeByCentralServer(), HttpStatus.OK);
     }
 
     @Autowired

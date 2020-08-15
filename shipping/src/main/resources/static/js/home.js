@@ -30,22 +30,9 @@ $(document).ready(function(){
         $('#cityPath').val(path);
     }
 
-    /*rest('GET', config.rest.city, _getCities);
+    //rest('GET', config.rest.city, _getCities);
     rest('GET', config.rest.type, _types);
-    rest('GET', config.rest.shippingInformation, _fillShippingInformation);*/
-
-    rest('GET', config.rest.ejemplo,_showExample);
-
-    function _showExample(response){
-        let html = '<div class="alert alert-primary alert-dismissible" role="alert">' +
-            '<strong>' + response + '</strong>' +
-            '<button class="close" type="button" data-dismiss="alert" aria-label="Close">' +
-            '<span aria-hidden="true">×</span>' +
-            '</button>' +
-            '</div>';
-
-        $('#alertDiv').append(html);
-    }
+    //rest('GET', config.rest.shippingInformation, _fillShippingInformation);*/
 
     function _sizes(sizes){
         _fillSelect(sizes, $('#sizeSelect'));

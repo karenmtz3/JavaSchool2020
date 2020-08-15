@@ -1,5 +1,5 @@
 const config = {
-    "host": "//localost",
+    "host": "http://localhost",
     "port": "8080",
     "rest" : {
         "size" : "",
@@ -10,6 +10,7 @@ const config = {
         "cityPath": "",
         "checkPrice" : "",
         "sendShipping": "",
-        "shippingInformation": ""
+        "shippingInformation": "",
+        "ejemplo": "/sendmessage"
     }
 };

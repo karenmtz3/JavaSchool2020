@@ -2,13 +2,16 @@ package com.shippingapp.shipping.services.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.shippingapp.shipping.models.PackageType;
 import com.shippingapp.shipping.services.WebService;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -21,14 +24,10 @@ public class WebServiceImpl implements WebService {
 
     private static final Logger logger = LoggerFactory.getLogger(WebServiceImpl.class);
 
-    private final AmqpTemplate rabbitTemplate;
-
-    private final ObjectMapper objectMapper;
+    @Autowired
+    private AmqpTemplate rabbitTemplate;
 
     private List<PackageType> packageTypeList;
-
-    @Value("${spring.rabbitmq.queue}")
-    String queueName;
 
     @Value("${spring.rabbitmq.template.exchange}")
     String exchange;
@@ -36,12 +35,8 @@ public class WebServiceImpl implements WebService {
     @Value("${spring.rabbitmq.template.routing-key}")
     private String routingkey;
 
-    public WebServiceImpl(AmqpTemplate rabbitTemplate) {
-        this.rabbitTemplate = rabbitTemplate;
-        objectMapper = new ObjectMapper();
-    }
-
     public List<String> getPackagesTypeByCentralServer(){
+        ObjectMapper objectMapper = new ObjectMapper();
         String message = "{\"type\":\"packageType\"}";
         String response = objectMapper.convertValue(
                 rabbitTemplate.convertSendAndReceive(exchange, routingkey, message),
@@ -53,13 +48,14 @@ public class WebServiceImpl implements WebService {
     private List<String> getDescriptionOrName(String response){
         List<String> descriptionList = new ArrayList<>();
         try{
-            JSONArray responseArray = new JSONArray(response);
+            JsonArray responseArray = new Gson().
+                    fromJson(response, JsonArray.class).getAsJsonArray();
             String key = "description";
             createPackageTypeList(responseArray);
 
-            for (int i = 0; i < responseArray.length(); i++) {
-                JSONObject packageType = responseArray.getJSONObject(i);
-                String description = packageType.getString(key);
+            for (JsonElement item : responseArray) {
+                JsonObject packageType = item.getAsJsonObject();
+                String description = packageType.get(key).getAsString();
                 descriptionList.add(description);
             }
 
@@ -69,14 +65,13 @@ public class WebServiceImpl implements WebService {
         return descriptionList;
     }
 
-    private void createPackageTypeList(JSONArray packageTypeArray){
+    private void createPackageTypeList(JsonArray packageTypeArray){
         packageTypeList = new ArrayList<>();
-
-        for (int i = 0; i < packageTypeArray.length(); i++) {
-            JSONObject packageTypeJSON = packageTypeArray.getJSONObject(i);
-            int id = packageTypeJSON.getInt("id");
-            String description = packageTypeJSON.getString("description");
-            int price = packageTypeJSON.getInt("price");
+        for (JsonElement item : packageTypeArray) {
+            JsonObject packageType = item.getAsJsonObject();
+            int id = packageType.get("id").getAsInt();
+            String description = packageType.get("description").getAsString();
+            int price = packageType.get("price").getAsInt();
             PackageType type = new PackageType(id,description,price);
             packageTypeList.add(type);
         }

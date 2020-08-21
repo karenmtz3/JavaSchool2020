@@ -49,7 +49,7 @@ public class PackageServiceImpl implements PackageService {
                 new TypeReference<String>() {});
 
         logger.info("response {}",response);
-        return getDescriptionsOrNames("");
+        return getDescriptionsOrNames(response);
     }
 
     private List<String> getDescriptionsOrNames(String response) {

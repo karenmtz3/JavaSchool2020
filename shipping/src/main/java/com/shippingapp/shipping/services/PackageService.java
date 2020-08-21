@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public interface WebService {
-    List<String> getPackagesTypeByCentralServer();
+public interface PackageService {
+    List<String> getPackagesType();
 
 }

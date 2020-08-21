@@ -2,7 +2,8 @@ package com.shippingapp.shipping.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.shippingapp.shipping.services.WebService;
+import com.shippingapp.shipping.exception.PackageServiceException;
+import com.shippingapp.shipping.services.PackageService;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +36,7 @@ public class WebControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private WebService webService;
+    private PackageService packageService;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -49,14 +50,14 @@ public class WebControllerTest {
     public void whenListPackageType_thenReturnListAnd200Status() throws Exception {
         List<String> expectedList =  Arrays.asList("Envelop", "Box");
 
-        when(webService.getPackagesTypeByCentralServer()).thenReturn(expectedList);
+        when(packageService.getPackagesType()).thenReturn(expectedList);
 
         MockHttpServletResponse response = mockMvc.perform(
-                MockMvcRequestBuilders.get("/getpackagetype"))
+                MockMvcRequestBuilders.get("/packageType"))
                 .andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        verify(webService).getPackagesTypeByCentralServer();
+        verify(packageService).getPackagesType();
 
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
@@ -67,14 +68,14 @@ public class WebControllerTest {
 
     @Test
     public void whenListPackageType_thenReturnEmptyListAnd200Status() throws Exception {
-        when(webService.getPackagesTypeByCentralServer()).thenReturn(new ArrayList<>());
+        when(packageService.getPackagesType()).thenReturn(new ArrayList<>());
 
         MockHttpServletResponse response = mockMvc.perform(
-                MockMvcRequestBuilders.get("/getpackagetype"))
+                MockMvcRequestBuilders.get("/packageType"))
                 .andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        verify(webService).getPackagesTypeByCentralServer();
+        verify(packageService).getPackagesType();
 
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(),

@@ -3,7 +3,7 @@ const config = {
     "port": "8080",
     "rest" : {
         "size" : "",
-        "type" : "/getpackagetype",
+        "type" : "/packageType",
         "time" : "",
         "transport" : "",
         "city" : "",

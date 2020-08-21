@@ -83,4 +83,15 @@ public class WebControllerTest {
 
         assertThat(receivedList).isEmpty();
     }
+
+    @Test
+    public void givenInvalidResponse_whenListPackageType_thenRejectWith417Status() throws Exception{
+        when(packageService.getPackagesType()).thenThrow(new PackageServiceException("Error to get type"));
+
+        MockHttpServletResponse response = mockMvc.perform(
+                MockMvcRequestBuilders.get("/packageType"))
+                .andReturn().getResponse();
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.EXPECTATION_FAILED.value());
+    }
 }

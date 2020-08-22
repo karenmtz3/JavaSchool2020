@@ -50,14 +50,14 @@ public class WebControllerTest {
     public void whenListPackageType_thenReturnListAnd200Status() throws Exception {
         List<String> expectedList =  Arrays.asList("Envelop", "Box");
 
-        when(packageService.getPackagesType()).thenReturn(expectedList);
+        when(packageService.getDescriptionsList()).thenReturn(expectedList);
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.get("/packageType"))
                 .andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        verify(packageService).getPackagesType();
+        verify(packageService).getDescriptionsList();
 
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
@@ -68,14 +68,14 @@ public class WebControllerTest {
 
     @Test
     public void whenListPackageType_thenReturnEmptyListAnd200Status() throws Exception {
-        when(packageService.getPackagesType()).thenReturn(new ArrayList<>());
+        when(packageService.getDescriptionsList()).thenReturn(new ArrayList<>());
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.get("/packageType"))
                 .andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        verify(packageService).getPackagesType();
+        verify(packageService).getDescriptionsList();
 
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
@@ -86,7 +86,7 @@ public class WebControllerTest {
 
     @Test
     public void givenInvalidResponse_whenListPackageType_thenRejectWith417Status() throws Exception{
-        when(packageService.getPackagesType()).thenThrow(new PackageServiceException("Error to get type"));
+        when(packageService.getDescriptionsList()).thenThrow(new PackageServiceException("Error to get type"));
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.get("/packageType"))

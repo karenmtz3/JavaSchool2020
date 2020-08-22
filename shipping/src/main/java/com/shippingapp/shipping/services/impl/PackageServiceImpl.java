@@ -2,10 +2,7 @@ package com.shippingapp.shipping.services.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import com.shippingapp.shipping.config.Connection;
 import com.shippingapp.shipping.exception.PackageServiceException;
 import com.shippingapp.shipping.models.PackageType;
@@ -18,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -38,9 +36,10 @@ public class PackageServiceImpl implements PackageService {
     public PackageServiceImpl(AmqpTemplate rabbitTemplate, Connection connection) {
         this.rabbitTemplate = rabbitTemplate;
         this.connection = connection;
+        packageTypeList = new ArrayList<>();
     }
 
-    public List<String> getPackagesType()  {
+    public List<String> getDescriptionsList()  {
         ObjectMapper objectMapper = new ObjectMapper();
         String message = "{\"type\":\"packageType\"}";
         String response = objectMapper.convertValue(
@@ -53,31 +52,45 @@ public class PackageServiceImpl implements PackageService {
     }
 
     private List<String> getDescriptionsOrNames(String response) {
-       try {
+        if(response.equals("")){
+            logger.error("Response can't be empty");
+            throw new PackageServiceException("Error to get type");
+        }
+
+        try {
            JsonArray responseArray = new Gson().
                    fromJson(response, JsonArray.class).getAsJsonArray();
 
            return createLists(responseArray);
-       }
-       catch (Exception ex){
-           logger.error("Error to get descriptions, unexpected response -> {} ", ex.getMessage());
+        }
+        catch (NullPointerException e){
+           logger.error("Response can't be null");
            throw new PackageServiceException("Error to get type");
-       }
+        }
     }
 
     private List<String> createLists(JsonArray packageTypeArray){
-        packageTypeList = new ArrayList<>();
         List<String> descriptionList = new ArrayList<>();
         for (JsonElement item : packageTypeArray) {
             JsonObject packageType = item.getAsJsonObject();
-            int id = packageType.get(ID).getAsInt();
-            String description = packageType.get(DESCRIPTION).getAsString();
-            int price = packageType.get(PRICE).getAsInt();
+            if(!packageType.get(ID).isJsonNull() && !packageType.get(DESCRIPTION).equals("")){
+                int id = packageType.get(ID).getAsInt();
+                String description = packageType.get(DESCRIPTION).getAsString();
+                int price = packageType.get(PRICE).getAsInt();
 
-            PackageType type = new PackageType(id,description,price);
+                PackageType type = new PackageType(id,description,price);
 
-            packageTypeList.add(type);
-            descriptionList.add(description);
+                descriptionList.add(description);
+                PackageType packageTypeOptional = packageTypeList.stream().
+                        filter(pt -> pt.getId() ==  type.getId()).findFirst().orElse(null);
+
+                if(packageTypeOptional == null)
+                    packageTypeList.add(type);
+            }
+            else{
+                logger.error("JsonObject not added to list, have null values or empty values  -> {}",
+                        packageType);
+            }
         }
         return descriptionList;
     }

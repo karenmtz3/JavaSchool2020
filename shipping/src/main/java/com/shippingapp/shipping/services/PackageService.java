@@ -6,6 +6,6 @@ import java.util.List;
 
 @Service
 public interface PackageService {
-    List<String> getPackagesType();
+    List<String> getDescriptionsList();
 
 }

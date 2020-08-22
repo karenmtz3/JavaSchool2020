@@ -1,4 +1,4 @@
-package com.shippingapp.shipping.config;
+package com.shippingapp.shipping.exception;
 
 import com.shippingapp.shipping.exception.PackageServiceException;
 import org.springframework.http.HttpStatus;

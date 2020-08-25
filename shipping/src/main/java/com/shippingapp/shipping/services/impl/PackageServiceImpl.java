@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 
 @Service
@@ -39,7 +38,7 @@ public class PackageServiceImpl implements PackageService {
         packageTypeList = new ArrayList<>();
     }
 
-    public List<String> getDescriptionsList()  {
+    public List<String> getPackageTypeDescriptions()  {
         ObjectMapper objectMapper = new ObjectMapper();
         String message = "{\"type\":\"packageType\"}";
         String response = objectMapper.convertValue(
@@ -52,21 +51,14 @@ public class PackageServiceImpl implements PackageService {
     }
 
     private List<String> getDescriptionsOrNames(String response) {
-        if(response.equals("")){
-            logger.error("Response can't be empty");
+        if(response == null || response.equals("")){
+            logger.error("Response can't be empty or null");
             throw new PackageServiceException("Error to get type");
         }
+        JsonArray responseArray = new Gson().
+                fromJson(response, JsonArray.class).getAsJsonArray();
 
-        try {
-           JsonArray responseArray = new Gson().
-                   fromJson(response, JsonArray.class).getAsJsonArray();
-
-           return createLists(responseArray);
-        }
-        catch (NullPointerException e){
-           logger.error("Response can't be null");
-           throw new PackageServiceException("Error to get type");
-        }
+        return createLists(responseArray);
     }
 
     private List<String> createLists(JsonArray packageTypeArray){
@@ -81,10 +73,11 @@ public class PackageServiceImpl implements PackageService {
                 PackageType type = new PackageType(id,description,price);
 
                 descriptionList.add(description);
-                PackageType packageTypeOptional = packageTypeList.stream().
-                        filter(pt -> pt.getId() ==  type.getId()).findFirst().orElse(null);
 
-                if(packageTypeOptional == null)
+                boolean packageTypeFound = packageTypeList.stream().
+                        anyMatch(pt -> pt.getId() == type.getId());
+
+                if(!packageTypeFound)
                     packageTypeList.add(type);
             }
             else{

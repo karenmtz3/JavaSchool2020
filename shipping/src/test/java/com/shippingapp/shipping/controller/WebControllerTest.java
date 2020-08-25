@@ -50,14 +50,14 @@ public class WebControllerTest {
     public void whenListPackageType_thenReturnListAnd200Status() throws Exception {
         List<String> expectedList =  Arrays.asList("Envelop", "Box");
 
-        when(packageService.getDescriptionsList()).thenReturn(expectedList);
+        when(packageService.getPackageTypeDescriptions()).thenReturn(expectedList);
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.get("/packageType"))
                 .andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        verify(packageService).getDescriptionsList();
+        verify(packageService).getPackageTypeDescriptions();
 
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
@@ -68,14 +68,14 @@ public class WebControllerTest {
 
     @Test
     public void whenListPackageType_thenReturnEmptyListAnd200Status() throws Exception {
-        when(packageService.getDescriptionsList()).thenReturn(new ArrayList<>());
+        when(packageService.getPackageTypeDescriptions()).thenReturn(new ArrayList<>());
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.get("/packageType"))
                 .andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        verify(packageService).getDescriptionsList();
+        verify(packageService).getPackageTypeDescriptions();
 
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
@@ -86,7 +86,7 @@ public class WebControllerTest {
 
     @Test
     public void givenInvalidResponse_whenListPackageType_thenRejectWith417Status() throws Exception{
-        when(packageService.getDescriptionsList()).thenThrow(new PackageServiceException("Error to get type"));
+        when(packageService.getPackageTypeDescriptions()).thenThrow(new PackageServiceException("Error to get type"));
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.get("/packageType"))

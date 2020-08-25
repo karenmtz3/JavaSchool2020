@@ -44,7 +44,7 @@ public class PackageServiceImplTest {
         when(rabbitTemplate.convertSendAndReceive(connection.getExchange(),
                         connection.getRoutingKey(), message)).thenReturn(messageReceived);
 
-        List<String> response = packageService.getDescriptionsList();
+        List<String> response = packageService.getPackageTypeDescriptions();
 
         assertThat(response).isEqualTo(responseExpected);
     }
@@ -57,16 +57,16 @@ public class PackageServiceImplTest {
                 connection.getRoutingKey(), message)).thenReturn(messageReceived);
 
        assertThatExceptionOfType(PackageServiceException.class).isThrownBy(
-               () -> packageService.getDescriptionsList());
+               () -> packageService.getPackageTypeDescriptions());
     }
 
     @Test
-    public void getDescriptionsListWithMessageReceivedNull_ThenThrowNullPointerException(){
+    public void getDescriptionsListWithMessageReceivedNull_ThenThrowPackageServiceException(){
         when(rabbitTemplate.convertSendAndReceive(connection.getExchange(),
                 connection.getRoutingKey(), message)).thenReturn(null);
 
-        assertThatNullPointerException().isThrownBy(
-                () -> packageService.getDescriptionsList());
+        assertThatExceptionOfType(PackageServiceException.class).isThrownBy(
+                () -> packageService.getPackageTypeDescriptions());
     }
 
     @Test
@@ -79,7 +79,7 @@ public class PackageServiceImplTest {
         when(rabbitTemplate.convertSendAndReceive(connection.getExchange(),
                 connection.getRoutingKey(), message)).thenReturn(messageReceived);
 
-        List<String> response = packageService.getDescriptionsList();
+        List<String> response = packageService.getPackageTypeDescriptions();
 
         assertThat(response).isEqualTo(responseExpected);
     }
@@ -94,7 +94,7 @@ public class PackageServiceImplTest {
         when(rabbitTemplate.convertSendAndReceive(connection.getExchange(),
                 connection.getRoutingKey(), message)).thenReturn(messageReceived);
 
-        List<String> response = packageService.getDescriptionsList();
+        List<String> response = packageService.getPackageTypeDescriptions();
 
         assertThat(response).isEqualTo(responseExpected);
     }

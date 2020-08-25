@@ -16,11 +16,11 @@ public class WebController {
 
     @GetMapping("/packageType")
     public ResponseEntity<List<String>> getPackagesType() {
-        return new ResponseEntity(packageService.getDescriptionsList(), HttpStatus.OK);
+        return new ResponseEntity(packageService.getPackageTypeDescriptions(), HttpStatus.OK);
     }
 
     @Autowired
-    public void setPackageService(PackageService packageService){
+    public WebController(PackageService packageService) {
         this.packageService = packageService;
     }
 }

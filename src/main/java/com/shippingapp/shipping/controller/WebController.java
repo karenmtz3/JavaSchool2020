@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -15,9 +16,14 @@ public class WebController {
 
     private PackageService packageService;
 
-    @GetMapping("/packageType")
+    @GetMapping("/type")
     public ResponseEntity<List<String>> getPackagesType() {
-        return new ResponseEntity(packageService.getPackageTypeDescriptions(), HttpStatus.OK);
+        return new ResponseEntity(packageService.getDescriptionsForPackagesType(), HttpStatus.OK);
+    }
+
+    @GetMapping("/size/{packageType}")
+    public ResponseEntity<List<String>> getPackagesSizeByType(@PathVariable String packageType) {
+        return new ResponseEntity(packageService.getDescriptionsForPackageSize(packageType), HttpStatus.OK);
     }
 
     @Autowired

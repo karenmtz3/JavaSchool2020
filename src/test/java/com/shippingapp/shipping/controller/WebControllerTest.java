@@ -34,6 +34,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 public class WebControllerTest {
 
     private MockMvc mockMvc;
+    private final static String PACKAGE_TYPE = "Box";
 
     @MockBean
     private PackageService packageService;
@@ -47,17 +48,17 @@ public class WebControllerTest {
     }
 
     @Test
-    public void whenListPackageType_thenReturnListAnd200Status() throws Exception {
+    public void whenGetDescriptionsForPackagesType_thenReturnListAnd200Status() throws Exception {
         List<String> expectedList =  Arrays.asList("Envelop", "Box");
 
-        when(packageService.getPackageTypeDescriptions()).thenReturn(expectedList);
+        when(packageService.getDescriptionsForPackagesType()).thenReturn(expectedList);
 
         MockHttpServletResponse response = mockMvc.perform(
-                MockMvcRequestBuilders.get("/packageType"))
+                MockMvcRequestBuilders.get("/type"))
                 .andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        verify(packageService).getPackageTypeDescriptions();
+        verify(packageService).getDescriptionsForPackagesType();
 
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
@@ -67,15 +68,15 @@ public class WebControllerTest {
     }
 
     @Test
-    public void whenListPackageType_thenReturnEmptyListAnd200Status() throws Exception {
-        when(packageService.getPackageTypeDescriptions()).thenReturn(new ArrayList<>());
+    public void whenGetDescriptionsForPackagesType_thenReturnEmptyListAnd200Status() throws Exception {
+        when(packageService.getDescriptionsForPackagesType()).thenReturn(new ArrayList<>());
 
         MockHttpServletResponse response = mockMvc.perform(
-                MockMvcRequestBuilders.get("/packageType"))
+                MockMvcRequestBuilders.get("/type"))
                 .andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        verify(packageService).getPackageTypeDescriptions();
+        verify(packageService).getDescriptionsForPackagesType();
 
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
@@ -85,11 +86,88 @@ public class WebControllerTest {
     }
 
     @Test
-    public void givenInvalidResponse_whenListPackageType_thenRejectWith417Status() throws Exception{
-        when(packageService.getPackageTypeDescriptions()).thenThrow(new PackageServiceException("Error to get type"));
+    public void givenInvalidResponse_whenGetDescriptionsForPackagesType_thenRejectWith417Status() throws Exception{
+        when(packageService.getDescriptionsForPackagesType()).thenThrow(new PackageServiceException("Error to get type"));
 
         MockHttpServletResponse response = mockMvc.perform(
-                MockMvcRequestBuilders.get("/packageType"))
+                MockMvcRequestBuilders.get("/type"))
+                .andReturn().getResponse();
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.EXPECTATION_FAILED.value());
+    }
+
+    @Test
+    public void givenInvalidPackageType_whenGetDescriptionsForPackageSize_thenReturnEmptyList() throws Exception{
+        String packageType = "some";
+        MockHttpServletResponse response = mockMvc.perform(
+                MockMvcRequestBuilders.get("/size/" + packageType))
+                .andReturn().getResponse();
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        verify(packageService).getDescriptionsForPackageSize(packageType);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
+                new TypeReference<List<String>>() {});
+
+        assertThat(receivedList).isEqualTo(new ArrayList<>());
+    }
+
+    @Test
+    public void notGivenAPackageType_whenGetDescriptionsForPackageSize_thenRejectWith404Status() throws Exception{
+
+
+        MockHttpServletResponse response = mockMvc.perform(
+                MockMvcRequestBuilders.get("/size/"))
+                .andReturn().getResponse();
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    public void givenAPackageType_whenGetDescriptionsForPackageSize_thenReturnListAnd200Status() throws Exception{
+        List<String> expectedList =  Arrays.asList("Small", "Medium", "Large");
+
+        when(packageService.getDescriptionsForPackageSize(PACKAGE_TYPE)).thenReturn(expectedList);
+
+        MockHttpServletResponse response = mockMvc.perform(
+                MockMvcRequestBuilders.get("/size/" + PACKAGE_TYPE))
+                .andReturn().getResponse();
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        verify(packageService).getDescriptionsForPackageSize(PACKAGE_TYPE);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
+                new TypeReference<List<String>>() {});
+
+        assertThat(receivedList).isEqualTo(expectedList);
+    }
+
+    @Test
+    public void givenAPackageType_whenGetDescriptionsForPackageSize_thenReturnEmptyListAnd200Status() throws  Exception{
+        when(packageService.getDescriptionsForPackageSize(PACKAGE_TYPE)).thenReturn(new ArrayList<>());
+
+        MockHttpServletResponse response = mockMvc.perform(
+                MockMvcRequestBuilders.get("/size/" + PACKAGE_TYPE))
+                .andReturn().getResponse();
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        verify(packageService).getDescriptionsForPackageSize(PACKAGE_TYPE);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
+                new TypeReference<List<String>>() {});
+
+        assertThat(receivedList).isEmpty();
+    }
+
+    @Test
+    public void givenAPackageTypeWithInvalidResponse_whenGetDescriptionsForPackagesSize_thenRejectWith417Status() throws Exception{
+        when(packageService.getDescriptionsForPackageSize(PACKAGE_TYPE)).thenThrow(new PackageServiceException("Error to get size"));
+
+        MockHttpServletResponse response = mockMvc.perform(
+                MockMvcRequestBuilders.get("/size/" + PACKAGE_TYPE))
                 .andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.EXPECTATION_FAILED.value());

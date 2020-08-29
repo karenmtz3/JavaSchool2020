@@ -64,20 +64,13 @@ public class PackageServiceImpl implements PackageService {
         }
         String message = "{\"type\":\"packageSizeByType\",\"packageType\":\""+packageType+"\"}";
         String option = "size";
-        try{
-            String response = objectMapper.convertValue(
-                    rabbitTemplate.convertSendAndReceive(connection.getExchange(),
-                            connection.getRoutingKey(), message),
-                    new TypeReference<String>() {});
+        String response = objectMapper.convertValue(
+                rabbitTemplate.convertSendAndReceive(connection.getExchange(),
+                        connection.getRoutingKey(), message),
+                new TypeReference<String>() {});
 
-            logger.info("response package size {}",response);
-            return getDescriptions(response, option);
-        }
-        catch(Exception e){
-            logger.error("Error to connect central server");
-            throw new InternalError("Error to connect");
-        }
-
+        logger.info("response package size {}",response);
+        return getDescriptions(response, option);
     }
 
     private List<String> getDescriptions(String response, String option) {

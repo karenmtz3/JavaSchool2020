@@ -1,9 +1,11 @@
 package com.shippingapp.shipping.models;
 
+import java.util.Objects;
+
 public class PackageSize {
-    private int id;
-    private String description;
-    private int priceFactor;
+    private final int id;
+    private final String description;
+    private final int priceFactor;
 
     public PackageSize(int id, String description, int priceFactor) {
         this.id = id;
@@ -21,5 +23,18 @@ public class PackageSize {
 
     public int getPriceFactor() {
         return priceFactor;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PackageSize size = (PackageSize) o;
+        return id == size.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

@@ -91,7 +91,7 @@ public class PackageControllerTest {
     @Test
     public void givenInvalidResponse_whenGetDescriptionsForPackageTypes_thenRejectWith502Status() throws Exception {
         when(packageService.getDescriptionsForPackageTypes()).
-                thenThrow(new PackageServiceException("Error to get type"));
+                thenThrow(new PackageServiceException("Error to get type", HttpStatus.BAD_GATEWAY));
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.get("/type"))
@@ -166,7 +166,8 @@ public class PackageControllerTest {
 
     @Test
     public void givenAPackageTypeWithInvalidResponse_whenGetDescriptionsForPackageSizes_thenRejectWith502Status() throws Exception {
-        when(packageService.getDescriptionsForPackageSize(PACKAGE_TYPE)).thenThrow(new PackageServiceException("Error to get size"));
+        when(packageService.getDescriptionsForPackageSize(PACKAGE_TYPE)).
+                thenThrow(new PackageServiceException("Error to get size", HttpStatus.BAD_GATEWAY));
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.get("/size/" + PACKAGE_TYPE))

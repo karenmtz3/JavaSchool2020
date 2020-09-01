@@ -1,9 +1,11 @@
 package com.shippingapp.shipping.models;
 
+import java.util.Objects;
+
 public class PackageType {
-    private int id;
-    private String description;
-    private int price;
+    private final int id;
+    private final String description;
+    private final int price;
 
     public PackageType(int id, String description, int price) {
         this.id = id;
@@ -21,5 +23,18 @@ public class PackageType {
 
     public int getPrice() {
         return price;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PackageType that = (PackageType) o;
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

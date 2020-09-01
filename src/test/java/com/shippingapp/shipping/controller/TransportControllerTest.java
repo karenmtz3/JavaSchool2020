@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -63,7 +63,7 @@ public class TransportControllerTest {
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
                 new TypeReference<List<String>>() {});
 
-        AssertionsForInterfaceTypes.assertThat(receivedList).isEqualTo(expectedList);
+        assertThat(receivedList).isEqualTo(expectedList);
     }
 
     @Test
@@ -81,7 +81,7 @@ public class TransportControllerTest {
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
                 new TypeReference<List<String>>() {});
 
-        AssertionsForInterfaceTypes.assertThat(receivedList).isEmpty();
+        assertThat(receivedList).isEmpty();
     }
 
     @Test

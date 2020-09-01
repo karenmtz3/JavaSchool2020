@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConfigurationProperties
-public class Connection {
+public class ConnectionProperties {
     private String exchange;
     private String routingKey;
     private String queueName;

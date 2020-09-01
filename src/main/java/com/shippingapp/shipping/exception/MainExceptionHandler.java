@@ -12,7 +12,7 @@ public class MainExceptionHandler {
 
     @ExceptionHandler({PackageServiceException.class})
     public ResponseEntity<String> handlePackageServiceException(PackageServiceException e) {
-        return error(HttpStatus.EXPECTATION_FAILED, e);
+        return error(HttpStatus.BAD_GATEWAY, e);
     }
 
     private ResponseEntity<String> error(HttpStatus status, Exception e) {

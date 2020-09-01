@@ -6,7 +6,7 @@ import java.util.List;
 
 @Service
 public interface PackageService {
-    List<String> getDescriptionsForPackagesType();
+    List<String> getDescriptionsForPackageTypes();
 
     List<String> getDescriptionsForPackageSize(String packageType);
 

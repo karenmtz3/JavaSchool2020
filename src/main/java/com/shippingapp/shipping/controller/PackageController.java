@@ -12,13 +12,13 @@ import java.util.List;
 
 
 @RestController
-public class WebController {
+public class PackageController {
 
     private PackageService packageService;
 
     @GetMapping("/type")
     public ResponseEntity<List<String>> getPackagesType() {
-        return new ResponseEntity(packageService.getDescriptionsForPackagesType(), HttpStatus.OK);
+        return new ResponseEntity(packageService.getDescriptionsForPackageTypes(), HttpStatus.OK);
     }
 
     @GetMapping("/size/{packageType}")
@@ -27,7 +27,7 @@ public class WebController {
     }
 
     @Autowired
-    public WebController(PackageService packageService) {
+    public PackageController(PackageService packageService) {
         this.packageService = packageService;
     }
 }

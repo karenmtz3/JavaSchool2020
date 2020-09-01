@@ -86,7 +86,7 @@ public class TransportServiceImplTest {
     }
 
     @Test
-    public void getDescriptionsForTransportTypesWithAnyValueEmptyOfMessageReceived_SuccessExpected(){
+    public void getDescriptionsForTransportTypesWithAnyValueEmptyOfMessageReceived_SuccessExpected() {
         String messageReceived = "[{\"id\":3,\"description\":\"\",\"pricePerMile\":2}," +
                 "{\"id\":4,\"description\":\"Air\",\"pricePerMile\":3}]";
 

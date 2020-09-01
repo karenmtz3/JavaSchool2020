@@ -85,13 +85,13 @@ public class WebControllerTest {
     }
 
     @Test
-    public void givenInvalidResponse_whenListPackageType_thenRejectWith417Status() throws Exception{
+    public void givenInvalidResponse_whenListPackageType_thenRejectWith502Status() throws Exception{
         when(packageService.getPackageTypeDescriptions()).thenThrow(new PackageServiceException("Error to get type"));
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.get("/packageType"))
                 .andReturn().getResponse();
 
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.EXPECTATION_FAILED.value());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_GATEWAY.value());
     }
 }

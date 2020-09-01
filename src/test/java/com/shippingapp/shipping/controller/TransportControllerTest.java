@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shippingapp.shipping.exception.TransportServiceException;
 import com.shippingapp.shipping.services.TransportService;
-import org.assertj.core.api.AssertionsForInterfaceTypes;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,13 +41,13 @@ public class TransportControllerTest {
     private WebApplicationContext webApplicationContext;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         this.mockMvc = webAppContextSetup(webApplicationContext).build();
     }
 
     @Test
-    public void whenGetDescriptionsForTransportType_thenReturnListAnd200Status() throws Exception{
-        List<String> expectedList =  Arrays.asList("Land", "Air");
+    public void whenGetDescriptionsForTransportType_thenReturnListAnd200Status() throws Exception {
+        List<String> expectedList = Arrays.asList("Land", "Air");
 
         when(transportService.getDescriptionForTransportTypes()).thenReturn(expectedList);
 
@@ -61,13 +60,14 @@ public class TransportControllerTest {
 
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
-                new TypeReference<List<String>>() {});
+                new TypeReference<List<String>>() {
+                });
 
         assertThat(receivedList).isEqualTo(expectedList);
     }
 
     @Test
-    public void whenGetDescriptionsForTransportType_thenReturnEmptyListAnd200Status() throws Exception{
+    public void whenGetDescriptionsForTransportType_thenReturnEmptyListAnd200Status() throws Exception {
         when(transportService.getDescriptionForTransportTypes()).thenReturn(new ArrayList<>());
 
         MockHttpServletResponse response = mockMvc.perform(
@@ -79,13 +79,14 @@ public class TransportControllerTest {
 
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
-                new TypeReference<List<String>>() {});
+                new TypeReference<List<String>>() {
+                });
 
         assertThat(receivedList).isEmpty();
     }
 
     @Test
-    public void givenInvalidResponse_whenGetDescriptionsForTransportType_thenRejectWith502Status() throws Exception{
+    public void givenInvalidResponse_whenGetDescriptionsForTransportType_thenRejectWith502Status() throws Exception {
         when(transportService.getDescriptionForTransportTypes()).thenThrow(
                 new TransportServiceException("Error to get type..."));
 

@@ -89,15 +89,15 @@ public class PackageControllerTest {
     }
 
     @Test
-    public void givenInvalidResponse_whenGetDescriptionsForPackageTypes_thenRejectWith502Status() throws Exception {
+    public void givenInvalidResponse_whenGetDescriptionsForPackageTypes_thenRejectWith409Status() throws Exception {
         when(packageService.getDescriptionsForPackageTypes()).
-                thenThrow(new PackageServiceException("Error to get type", HttpStatus.BAD_GATEWAY));
+                thenThrow(new PackageServiceException("Error to get type"));
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.get("/type"))
                 .andReturn().getResponse();
 
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_GATEWAY.value());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.CONFLICT.value());
     }
 
     @Test
@@ -165,14 +165,14 @@ public class PackageControllerTest {
     }
 
     @Test
-    public void givenAPackageTypeWithInvalidResponse_whenGetDescriptionsForPackageSizes_thenRejectWith502Status() throws Exception {
+    public void givenAPackageTypeWithInvalidResponse_whenGetDescriptionsForPackageSizes_thenRejectWith409Status() throws Exception {
         when(packageService.getDescriptionsForPackageSize(PACKAGE_TYPE)).
-                thenThrow(new PackageServiceException("Error to get size", HttpStatus.BAD_GATEWAY));
+                thenThrow(new PackageServiceException("Error to get size"));
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.get("/size/" + PACKAGE_TYPE))
                 .andReturn().getResponse();
 
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_GATEWAY.value());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.CONFLICT.value());
     }
 }

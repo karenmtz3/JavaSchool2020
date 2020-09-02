@@ -2,6 +2,7 @@ package com.shippingapp.shipping.services.impl;
 
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.PackageServiceException;
+import com.shippingapp.shipping.exception.PackageTypeIsNullOrEmptyException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -142,7 +143,7 @@ public class PackageServiceImplTest {
 
     @Test
     public void getDescriptionsForPackageSizeWithPackageTypeEmpty_ThenThrowPackageServiceException() {
-        assertThatExceptionOfType(PackageServiceException.class).isThrownBy(
+        assertThatExceptionOfType(PackageTypeIsNullOrEmptyException.class).isThrownBy(
                 () -> packageService.getDescriptionsForPackageSize(" "));
     }
 

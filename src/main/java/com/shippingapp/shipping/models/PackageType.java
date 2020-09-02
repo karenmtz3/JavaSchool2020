@@ -2,7 +2,7 @@ package com.shippingapp.shipping.models;
 
 import java.util.Objects;
 
-public class PackageType {
+public final class PackageType {
     private final int id;
     private final String description;
     private final int price;

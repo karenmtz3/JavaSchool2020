@@ -2,7 +2,7 @@ package com.shippingapp.shipping.models;
 
 import java.util.Objects;
 
-public class PackageSize {
+public final class PackageSize {
     private final int id;
     private final String description;
     private final int priceFactor;

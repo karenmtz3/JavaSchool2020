@@ -2,15 +2,15 @@ package com.shippingapp.shipping.models;
 
 import java.util.Objects;
 
-public final class PackageType {
+public final class PackageSize {
     private final int id;
     private final String description;
-    private final int price;
+    private final int priceFactor;
 
-    public PackageType(int id, String description, int price) {
+    public PackageSize(int id, String description, int priceFactor) {
         this.id = id;
         this.description = description;
-        this.price = price;
+        this.priceFactor = priceFactor;
     }
 
     public int getId() {
@@ -21,16 +21,16 @@ public final class PackageType {
         return description;
     }
 
-    public int getPrice() {
-        return price;
+    public int getPriceFactor() {
+        return priceFactor;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        PackageType that = (PackageType) o;
-        return id == that.id;
+        PackageSize size = (PackageSize) o;
+        return id == size.id;
     }
 
     @Override

@@ -13,12 +13,7 @@ import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,49 +23,51 @@ public class TransportServiceImpl implements TransportService {
     private final AmqpTemplate rabbitTemplate;
     private final Connection connection;
 
-    private List<TransportType> transportTypeList;
-
     private final ObjectMapper objectMapper;
 
     @Autowired
     public TransportServiceImpl(AmqpTemplate rabbitTemplate, Connection connection) {
         this.rabbitTemplate = rabbitTemplate;
         this.connection = connection;
-        transportTypeList = new ArrayList<>();
         objectMapper = new ObjectMapper();
     }
 
     public List<String> getDescriptionForTransportTypes() {
-        String message = "{\"type\":\"transportType\"}";
-        Object messageObject = rabbitTemplate.convertSendAndReceive(connection.getExchange(),
-                connection.getRoutingKey(), message);
-        String response = objectMapper.convertValue(messageObject, new TypeReference<String>() {
-        });
+        try {
+            String message = "{\"type\":\"transportType\"}";
+            Object messageObject = rabbitTemplate.convertSendAndReceive(connection.getExchange(),
+                    connection.getRoutingKey(), message);
+            String response = objectMapper.convertValue(messageObject,
+                    new TypeReference<String>() {
+                    });
 
-        logger.info("response transport type {}", response);
-        return getDescriptionTypesList(response);
+            logger.info("response transport type {}", response);
+            if (response == null || response.trim().isEmpty()) {
+                logger.error("response of transport type is null or empty");
+                throw new TransportServiceException("Error to get package types");
+            }
+            return getDescriptionTypesList(response);
+        } catch (Exception e) {
+            throw new TransportServiceException("Central server can't get response");
+        }
     }
 
     private List<String> getDescriptionTypesList(String response) {
-        List<String> descriptionList = new ArrayList<>();
-        if (response == null || response.trim().isEmpty()) {
-            logger.error("response of transport type is null or empty");
-            throw new TransportServiceException("Error to get package types");
-        }
+        return getTransportTypesList(response)
+                .stream()
+                .map(TransportType::getDescription)
+                .collect(Collectors.toList());
+    }
+
+    private List<TransportType> getTransportTypesList(String response) {
         List<TransportType> transportTypes = new Gson().fromJson(response,
                 new TypeReference<List<TransportType>>() {
                 }.getType());
-        transportTypes.removeIf(tt -> tt.getId() == 0 || tt.getDescription().isEmpty());
-        transportTypeList = transportTypes.stream().filter(distinctByKey(TransportType::getId))
-                .collect(Collectors.toList());
-        for (TransportType pt : transportTypeList) {
-            descriptionList.add(pt.getDescription());
-        }
-        return descriptionList;
-    }
 
-    public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
-        Map<Object, Boolean> seen = new ConcurrentHashMap<>();
-        return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
+        return transportTypes
+                .stream()
+                .filter(t -> t.getId() != 0 && !t.getDescription().isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
     }
 }

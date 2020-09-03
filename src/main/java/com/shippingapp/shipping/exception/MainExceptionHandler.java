@@ -10,13 +10,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class MainExceptionHandler {
 
-    @ExceptionHandler({PackageServiceException.class, TransportServiceException.class})
-    public ResponseEntity<String> handlePackageServiceException(Exception e) {
-        return error(HttpStatus.BAD_GATEWAY, e);
+    @ExceptionHandler({PackageServiceException.class})
+    public ResponseEntity<String> handlePackageServiceException(PackageServiceException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
-    private ResponseEntity<String> error(HttpStatus status, Exception e) {
-        return ResponseEntity.status(status).body(e.getMessage());
-
+    @ExceptionHandler({TransportServiceException.class})
+    public ResponseEntity<String> handleTransportServiceException(TransportServiceException e){
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
+
 }

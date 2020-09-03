@@ -86,7 +86,7 @@ public class TransportControllerTest {
     }
 
     @Test
-    public void givenInvalidResponse_whenGetDescriptionsForTransportType_thenRejectWith502Status() throws Exception {
+    public void givenInvalidResponse_whenGetDescriptionsForTransportType_thenRejectWith409Status() throws Exception {
         when(transportService.getDescriptionForTransportTypes()).thenThrow(
                 new TransportServiceException("Error to get type..."));
 
@@ -94,6 +94,6 @@ public class TransportControllerTest {
                 MockMvcRequestBuilders.get("/transport/" + PACKAGE_TYPE))
                 .andReturn().getResponse();
 
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_GATEWAY.value());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.CONFLICT.value());
     }
 }

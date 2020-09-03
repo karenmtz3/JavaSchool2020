@@ -1,7 +1,6 @@
 package com.shippingapp.shipping.services.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.CentralServerException;
@@ -27,52 +26,43 @@ public class PackageServiceImpl implements PackageService {
     private final AmqpTemplate rabbitTemplate;
     private final ConnectionProperties connectionProperties;
 
-    private final ObjectMapper objectMapper;
-
     @Autowired
     public PackageServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties) {
         this.rabbitTemplate = rabbitTemplate;
         this.connectionProperties = connectionProperties;
-        objectMapper = new ObjectMapper();
     }
 
     public List<String> getDescriptionsForPackageTypes() {
         String message = "{\"type\":\"packageType\"}";
-
+        Object messageResponse;
         try {
-            Object messageObject = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+            messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                     connectionProperties.getRoutingKey(), message);
-            String response = objectMapper.convertValue(messageObject,
-                    new TypeReference<String>() {
-                    });
-
-            logger.info("response package type {}", response);
-            if (response == null || response.trim().isEmpty()) {
-                logger.error("response of package type is null or empty");
-                throw new PackageServiceException("response of package type is null or empty");
-            }
-            return getDescriptionTypesList(response);
         } catch (Exception ex) {
             throw new CentralServerException("Central server can't get response");
         }
-    }
 
-    private List<String> getDescriptionTypesList(String response) {
-        return getPackageTypesList(response)
-                .stream()
-                .map(PackageType::getDescription)
-                .collect(Collectors.toList());
-    }
-
-    private List<PackageType> getPackageTypesList(String response) {
-        List<PackageType> packageTypes = new Gson().fromJson(response,
+        logger.info("response package type {}", messageResponse);
+        if (messageResponse == null || messageResponse.toString().isEmpty()) {
+            logger.error("response of package type is empty");
+            throw new PackageServiceException("response of package type is empty");
+        }
+        List<PackageType> packageTypes = new Gson().fromJson(messageResponse.toString(),
                 new TypeReference<List<PackageType>>() {
                 }.getType());
+        return getDescriptionTypesList(packageTypes);
+    }
 
-        return packageTypes
+    private List<String> getDescriptionTypesList(List<PackageType> packageTypesList) {
+        List<PackageType> packageTypesListFiltered = packageTypesList
                 .stream()
                 .filter(pt -> pt.getId() != 0 && !pt.getDescription().isEmpty())
                 .distinct()
+                .collect(Collectors.toList());
+
+        return packageTypesListFiltered
+                .stream()
+                .map(PackageType::getDescription)
                 .collect(Collectors.toList());
     }
 
@@ -81,42 +71,36 @@ public class PackageServiceImpl implements PackageService {
             logger.error("packageType can't be empty or null");
             throw new PackageTypeIsNullOrEmptyException("Error to get package sizes");
         }
+        String message = "{\"type\":\"packageSizeByType\",\"packageType\":\"" + packageType + "\"}";
+        Object messageResponse;
         try {
-            String message = "{\"type\":\"packageSizeByType\",\"packageType\":\"" + packageType + "\"}";
-            Object messageObject = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+            messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                     connectionProperties.getRoutingKey(), message);
-            String response = objectMapper.convertValue(messageObject, new TypeReference<String>() {
-            });
-
-            logger.info("response package size {}", response);
-            if (response == null || response.trim().isEmpty()) {
-                logger.error("response of package size is null or empty");
-                throw new PackageServiceException("response of package size is null or empty");
-            }
-            return getDescriptionSizesList(response);
         } catch (Exception ex) {
             throw new CentralServerException("Central server can't get response");
         }
-    }
 
-    private List<String> getDescriptionSizesList(String response) {
-
-        return getPackageSizesList(response)
-                .stream()
-                .map(PackageSize::getDescription)
-                .collect(Collectors.toList());
-
-    }
-
-    private List<PackageSize> getPackageSizesList(String response) {
-        List<PackageSize> packageSizes = new Gson().fromJson(response,
+        logger.info("response package size {}", messageResponse);
+        if (messageResponse == null || messageResponse.toString().isEmpty()) {
+            logger.error("response of package size is empty");
+            throw new PackageServiceException("response of package size is empty");
+        }
+        List<PackageSize> packageSizes = new Gson().fromJson(messageResponse.toString(),
                 new TypeReference<List<PackageSize>>() {
                 }.getType());
+        return getDescriptionSizesList(packageSizes);
+    }
 
-        return packageSizes
+    private List<String> getDescriptionSizesList(List<PackageSize> packageSizes) {
+        List<PackageSize> packageSizesListFiltered = packageSizes
                 .stream()
                 .filter(ps -> ps.getId() != 0 && !ps.getDescription().isEmpty())
                 .distinct()
+                .collect(Collectors.toList());
+
+        return packageSizesListFiltered
+                .stream()
+                .map(PackageSize::getDescription)
                 .collect(Collectors.toList());
     }
 }

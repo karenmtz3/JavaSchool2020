@@ -1,9 +1,9 @@
 package com.shippingapp.shipping.services.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import com.shippingapp.shipping.config.Connection;
+import com.shippingapp.shipping.config.ConnectionProperties;
+import com.shippingapp.shipping.exception.CentralServerException;
 import com.shippingapp.shipping.exception.TransportServiceException;
 import com.shippingapp.shipping.models.TransportType;
 import com.shippingapp.shipping.services.TransportService;
@@ -21,53 +21,45 @@ public class TransportServiceImpl implements TransportService {
     private static final Logger logger = LoggerFactory.getLogger(PackageServiceImpl.class);
 
     private final AmqpTemplate rabbitTemplate;
-    private final Connection connection;
-
-    private final ObjectMapper objectMapper;
+    private final ConnectionProperties connectionProperties;
 
     @Autowired
-    public TransportServiceImpl(AmqpTemplate rabbitTemplate, Connection connection) {
+    public TransportServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties) {
         this.rabbitTemplate = rabbitTemplate;
-        this.connection = connection;
-        objectMapper = new ObjectMapper();
+        this.connectionProperties = connectionProperties;
     }
 
     public List<String> getDescriptionForTransportTypes() {
+        String message = "{\"type\":\"transportType\"}";
+        Object messageResponse;
         try {
-            String message = "{\"type\":\"transportType\"}";
-            Object messageObject = rabbitTemplate.convertSendAndReceive(connection.getExchange(),
-                    connection.getRoutingKey(), message);
-            String response = objectMapper.convertValue(messageObject,
-                    new TypeReference<String>() {
-                    });
-
-            logger.info("response transport type {}", response);
-            if (response == null || response.trim().isEmpty()) {
-                logger.error("response of transport type is null or empty");
-                throw new TransportServiceException("Error to get package types");
-            }
-            return getDescriptionTypesList(response);
-        } catch (Exception e) {
-            throw new TransportServiceException("Central server can't get response");
+            messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                    connectionProperties.getRoutingKey(), message);
+        } catch (Exception ex) {
+            throw new CentralServerException("Central server can't get response");
         }
-    }
 
-    private List<String> getDescriptionTypesList(String response) {
-        return getTransportTypesList(response)
-                .stream()
-                .map(TransportType::getDescription)
-                .collect(Collectors.toList());
-    }
-
-    private List<TransportType> getTransportTypesList(String response) {
-        List<TransportType> transportTypes = new Gson().fromJson(response,
+        logger.info("response transport type {}", messageResponse);
+        if (messageResponse == null || messageResponse.toString().isEmpty()) {
+            logger.error("response of transport type is null or empty");
+            throw new TransportServiceException("Error to get package types");
+        }
+        List<TransportType> transportTypes = new Gson().fromJson(messageResponse.toString(),
                 new TypeReference<List<TransportType>>() {
                 }.getType());
+        return getDescriptionTypesList(transportTypes);
+    }
 
-        return transportTypes
+    private List<String> getDescriptionTypesList(List<TransportType> transportTypesList) {
+        List<TransportType> transportTypeListFiltered = transportTypesList
                 .stream()
-                .filter(t -> t.getId() != 0 && !t.getDescription().isEmpty())
+                .filter(tt -> tt.getId() != 0 && !tt.getDescription().isEmpty())
                 .distinct()
+                .collect(Collectors.toList());
+
+        return transportTypeListFiltered
+                .stream()
+                .map(TransportType::getDescription)
                 .collect(Collectors.toList());
     }
 }

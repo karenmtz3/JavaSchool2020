@@ -142,7 +142,7 @@ public class PackageServiceImplTest {
     }
 
     @Test
-    public void getDescriptionsForPackageSizeWithPackageTypeEmpty_ThenThrowPackageServiceException() {
+    public void getDescriptionsForPackageSizeWithPackageTypeEmpty_ThenThrowPackageTypeIsNullOrEmptyException() {
         assertThatExceptionOfType(PackageTypeIsNullOrEmptyException.class).isThrownBy(
                 () -> packageService.getDescriptionsForPackageSize(" "));
     }

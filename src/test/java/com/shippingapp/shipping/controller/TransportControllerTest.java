@@ -33,6 +33,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 public class TransportControllerTest {
     private MockMvc mockMvc;
     private final static String PACKAGE_TYPE = "Box";
+    private ObjectMapper objectMapper;
 
     @MockBean
     private TransportService transportService;
@@ -43,6 +44,7 @@ public class TransportControllerTest {
     @Before
     public void setUp() {
         this.mockMvc = webAppContextSetup(webApplicationContext).build();
+        objectMapper = new ObjectMapper();
     }
 
     @Test
@@ -58,7 +60,6 @@ public class TransportControllerTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
         verify(transportService).getDescriptionForTransportTypes();
 
-        ObjectMapper objectMapper = new ObjectMapper();
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
                 new TypeReference<List<String>>() {
                 });
@@ -77,7 +78,6 @@ public class TransportControllerTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
         verify(transportService).getDescriptionForTransportTypes();
 
-        ObjectMapper objectMapper = new ObjectMapper();
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(),
                 new TypeReference<List<String>>() {
                 });

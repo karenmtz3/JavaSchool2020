@@ -1,6 +1,6 @@
 package com.shippingapp.shipping.services.impl;
 
-import com.shippingapp.shipping.config.Connection;
+import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.TransportServiceException;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,20 +19,21 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TransportServiceImplTest {
+
     private String messageType;
 
     private TransportServiceImpl transportService;
-    private Connection connection;
+    private ConnectionProperties connectionProperties;
     private AmqpTemplate rabbitTemplate;
 
     @Before
     public void setUp() {
         this.rabbitTemplate = Mockito.mock(AmqpTemplate.class);
-        this.connection = Mockito.mock(Connection.class);
+        this.connectionProperties = Mockito.mock(ConnectionProperties.class);
 
         messageType = "{\"type\":\"transportType\"}";
 
-        transportService = new TransportServiceImpl(rabbitTemplate, connection);
+        transportService = new TransportServiceImpl(rabbitTemplate, connectionProperties);
     }
 
     @Test
@@ -42,8 +43,8 @@ public class TransportServiceImplTest {
 
         List<String> responseExpected = Arrays.asList("Land", "Air");
 
-        when(rabbitTemplate.convertSendAndReceive(connection.getExchange(),
-                connection.getRoutingKey(), messageType)).thenReturn(messageReceived);
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messageType)).thenReturn(messageReceived);
 
         List<String> response = transportService.getDescriptionForTransportTypes();
 
@@ -54,8 +55,8 @@ public class TransportServiceImplTest {
     public void getDescriptionForTransportTypesWithMessageReceivedEmpty_thenThrowTransportServiceException() {
         String messageReceived = "";
 
-        when(rabbitTemplate.convertSendAndReceive(connection.getExchange(),
-                connection.getRoutingKey(), messageType)).thenReturn(messageReceived);
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messageType)).thenReturn(messageReceived);
 
         assertThatExceptionOfType(TransportServiceException.class).isThrownBy(
                 () -> transportService.getDescriptionForTransportTypes());
@@ -63,8 +64,8 @@ public class TransportServiceImplTest {
 
     @Test
     public void getDescriptionsForTransportTypesWithMessageReceivedNull_thenThrowTransportServiceException() {
-        when(rabbitTemplate.convertSendAndReceive(connection.getExchange(),
-                connection.getRoutingKey(), messageType)).thenReturn(null);
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messageType)).thenReturn(null);
 
         assertThatExceptionOfType(TransportServiceException.class).isThrownBy(
                 () -> transportService.getDescriptionForTransportTypes());
@@ -77,8 +78,8 @@ public class TransportServiceImplTest {
 
         List<String> responseExpected = Collections.singletonList("Air");
 
-        when(rabbitTemplate.convertSendAndReceive(connection.getExchange(),
-                connection.getRoutingKey(), messageType)).thenReturn(messageReceived);
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messageType)).thenReturn(messageReceived);
 
         List<String> response = transportService.getDescriptionForTransportTypes();
 
@@ -92,8 +93,8 @@ public class TransportServiceImplTest {
 
         List<String> responseExpected = Collections.singletonList("Air");
 
-        when(rabbitTemplate.convertSendAndReceive(connection.getExchange(),
-                connection.getRoutingKey(), messageType)).thenReturn(messageReceived);
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messageType)).thenReturn(messageReceived);
 
         List<String> response = transportService.getDescriptionForTransportTypes();
 

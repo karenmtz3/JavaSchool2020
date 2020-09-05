@@ -42,7 +42,7 @@ public class TransportServiceImpl implements TransportService {
         logger.info("response transport type {}", messageResponse);
         if (messageResponse == null || messageResponse.toString().isEmpty()) {
             logger.error("response of transport type is null or empty");
-            throw new TransportServiceException("Error to get package types");
+            throw new TransportServiceException("Error to get transport types");
         }
         List<TransportType> transportTypes = new Gson().fromJson(messageResponse.toString(),
                 new TypeReference<List<TransportType>>() {
@@ -51,14 +51,10 @@ public class TransportServiceImpl implements TransportService {
     }
 
     private List<String> getDescriptionTypesList(List<TransportType> transportTypesList) {
-        List<TransportType> transportTypeListFiltered = transportTypesList
+        return transportTypesList
                 .stream()
                 .filter(tt -> tt.getId() != 0 && !tt.getDescription().isEmpty())
                 .distinct()
-                .collect(Collectors.toList());
-
-        return transportTypeListFiltered
-                .stream()
                 .map(TransportType::getDescription)
                 .collect(Collectors.toList());
     }

@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 @AutoConfigureMockMvc
 public class TransportControllerTest {
     private MockMvc mockMvc;
-    private final static String PACKAGE_TYPE = "Box";
+    private final static String PACKAGE_SIZE = "Small";
     private ObjectMapper objectMapper;
 
     @MockBean
@@ -54,7 +54,7 @@ public class TransportControllerTest {
         when(transportService.getDescriptionForTransportTypes()).thenReturn(expectedList);
 
         MockHttpServletResponse response = mockMvc.perform(
-                MockMvcRequestBuilders.get("/transport/" + PACKAGE_TYPE))
+                MockMvcRequestBuilders.get("/transport/" + PACKAGE_SIZE))
                 .andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
@@ -72,7 +72,7 @@ public class TransportControllerTest {
         when(transportService.getDescriptionForTransportTypes()).thenReturn(new ArrayList<>());
 
         MockHttpServletResponse response = mockMvc.perform(
-                MockMvcRequestBuilders.get("/transport/" + PACKAGE_TYPE))
+                MockMvcRequestBuilders.get("/transport/" + PACKAGE_SIZE))
                 .andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
@@ -91,7 +91,7 @@ public class TransportControllerTest {
                 new TransportServiceException("Error to get type..."));
 
         MockHttpServletResponse response = mockMvc.perform(
-                MockMvcRequestBuilders.get("/transport/" + PACKAGE_TYPE))
+                MockMvcRequestBuilders.get("/transport/" + PACKAGE_SIZE))
                 .andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.CONFLICT.value());

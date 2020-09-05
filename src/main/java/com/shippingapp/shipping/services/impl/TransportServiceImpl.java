@@ -10,7 +10,6 @@ import com.shippingapp.shipping.services.TransportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,7 +22,6 @@ public class TransportServiceImpl implements TransportService {
     private final AmqpTemplate rabbitTemplate;
     private final ConnectionProperties connectionProperties;
 
-    @Autowired
     public TransportServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties) {
         this.rabbitTemplate = rabbitTemplate;
         this.connectionProperties = connectionProperties;

@@ -6,6 +6,7 @@ import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.CentralServerException;
 import com.shippingapp.shipping.exception.TransportServiceException;
 import com.shippingapp.shipping.models.TransportType;
+import com.shippingapp.shipping.models.TransportVelocity;
 import com.shippingapp.shipping.services.TransportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,21 +29,11 @@ public class TransportServiceImpl implements TransportService {
     }
 
     public List<String> getDescriptionForTransportTypes() {
-        String message = "{\"type\":\"transportType\"}";
-        Object messageResponse;
-        try {
-            messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
-                    connectionProperties.getRoutingKey(), message);
-        } catch (Exception ex) {
-            throw new CentralServerException("Central server can't get response");
-        }
+        String type = "transportType";
+        String messageResponse = getMessageResponse(type);
 
         logger.info("response transport type {}", messageResponse);
-        if (messageResponse == null || messageResponse.toString().isEmpty()) {
-            logger.error("response of transport type is null or empty");
-            throw new TransportServiceException("Error to get transport types");
-        }
-        List<TransportType> transportTypes = new Gson().fromJson(messageResponse.toString(),
+        List<TransportType> transportTypes = new Gson().fromJson(messageResponse,
                 new TypeReference<List<TransportType>>() {
                 }.getType());
         return getDescriptionTypesList(transportTypes);
@@ -55,5 +46,42 @@ public class TransportServiceImpl implements TransportService {
                 .distinct()
                 .map(TransportType::getDescription)
                 .collect(Collectors.toList());
+    }
+
+    public List<String> getDescriptionForTransportVelocity() {
+        String type = "transportVelocity";
+        String messageResponse = getMessageResponse(type);
+
+        logger.info("response transport velocity {}", messageResponse);
+        List<TransportVelocity> transportVelocities = new Gson().fromJson(messageResponse,
+                new TypeReference<List<TransportVelocity>>() {
+                }.getType());
+        return getDescriptionVelocitiesList(transportVelocities);
+    }
+
+    private List<String> getDescriptionVelocitiesList(List<TransportVelocity> transportVelocities) {
+        return transportVelocities
+                .stream()
+                .filter(tv -> tv.getId() != 0 && !tv.getDescription().isEmpty())
+                .distinct()
+                .map(TransportVelocity::getDescription)
+                .collect(Collectors.toList());
+    }
+
+    private String getMessageResponse(String type) {
+        String message = "{\"type\":\"" + type + "\"}";
+        Object messageResponse;
+        try {
+            messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                    connectionProperties.getRoutingKey(), message);
+        } catch (Exception ex) {
+            throw new CentralServerException("Central server can't get response");
+        }
+
+        if (messageResponse == null || messageResponse.toString().isEmpty()) {
+            logger.error("response of {} is null or empty", type);
+            throw new TransportServiceException("Error to get " + type);
+        }
+        return messageResponse.toString();
     }
 }

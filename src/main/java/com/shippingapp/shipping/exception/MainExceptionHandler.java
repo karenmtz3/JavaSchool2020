@@ -22,4 +22,8 @@ public class MainExceptionHandler {
     public ResponseEntity<String> handlePackageTypeIsNullOrEmptyException(PackageTypeIsNullOrEmptyException e){
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
+    @ExceptionHandler({TransportServiceException.class})
+    public ResponseEntity<String> handleTransportServiceException(TransportServiceException e){
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
 }

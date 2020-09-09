@@ -108,7 +108,7 @@ public class TransportControllerTest {
                 MockMvcRequestBuilders.get("/transport/" + PACKAGE_SIZE))
                 .andReturn().getResponse();
 
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.EXPECTATION_FAILED.value());
     }
 
     @Test
@@ -170,6 +170,6 @@ public class TransportControllerTest {
                 MockMvcRequestBuilders.get("/time/" + TRANSPORT_TYPE))
                 .andReturn().getResponse();
 
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.EXPECTATION_FAILED.value());
     }
 }

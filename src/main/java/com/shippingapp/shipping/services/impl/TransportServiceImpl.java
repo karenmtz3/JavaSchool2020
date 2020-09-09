@@ -33,12 +33,11 @@ public class TransportServiceImpl implements TransportService {
     private final AmqpTemplate rabbitTemplate;
     private final ConnectionProperties connectionProperties;
 
-    private static Gson gson;
+    private static final Gson gson = new Gson();
 
     public TransportServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties) {
         this.rabbitTemplate = rabbitTemplate;
         this.connectionProperties = connectionProperties;
-        gson = new Gson();
     }
 
     public List<String> getDescriptionForTransportTypes() {
@@ -84,7 +83,7 @@ public class TransportServiceImpl implements TransportService {
             messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                     connectionProperties.getRoutingKey(), message);
         } catch (AmqpException ex) {
-            logger.error("Central server can´t get response -> {}", ex.toString());
+            logger.error(ex.getMessage());
             throw new CentralServerException();
         }
 

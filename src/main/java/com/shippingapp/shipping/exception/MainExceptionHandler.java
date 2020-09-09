@@ -15,15 +15,17 @@ public class MainExceptionHandler {
     }
 
     @ExceptionHandler({CentralServerException.class})
-    public ResponseEntity<String> handleCentralServerException(CentralServerException e){
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    public ResponseEntity<String> handleCentralServerException(CentralServerException e) {
+        return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(e.getMessage());
     }
+
     @ExceptionHandler({PackageTypeIsNullOrEmptyException.class})
-    public ResponseEntity<String> handlePackageTypeIsNullOrEmptyException(PackageTypeIsNullOrEmptyException e){
+    public ResponseEntity<String> handlePackageTypeIsNullOrEmptyException(PackageTypeIsNullOrEmptyException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
+
     @ExceptionHandler({TransportServiceException.class})
-    public ResponseEntity<String> handleTransportServiceException(TransportServiceException e){
+    public ResponseEntity<String> handleTransportServiceException(TransportServiceException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 }

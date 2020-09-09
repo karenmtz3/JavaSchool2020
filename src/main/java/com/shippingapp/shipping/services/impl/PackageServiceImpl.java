@@ -35,13 +35,12 @@ public class PackageServiceImpl implements PackageService {
 
     public List<String> getDescriptionsForPackageTypes() {
         String message = "{\"type\":\"packageType\"}";
-        Object messageResponse;
+        Object messageResponse = null;
         try {
             messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                     connectionProperties.getRoutingKey(), message);
         } catch (AmqpException ex) {
-            logger.error("Central server can´t get response -> {}", ex.toString());
-            throw new CentralServerException();
+            handleException(ex.getMessage());
         }
 
         logger.info("response package type {}", messageResponse);
@@ -74,17 +73,16 @@ public class PackageServiceImpl implements PackageService {
             throw new PackageTypeIsNullOrEmptyException("Error to get package sizes");
         }
         String message = "{\"type\":\"packageSizeByType\",\"packageType\":\"" + packageType + "\"}";
-        Object messageResponse;
+        Object messageResponse = null;
         try {
             messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                     connectionProperties.getRoutingKey(), message);
         } catch (AmqpException ex) {
-            logger.error("Central server can´t get response -> {}", ex.toString());
-            throw new CentralServerException();
+            handleException(ex.getMessage());
         }
 
         logger.info("response package size {}", messageResponse);
-        if (messageResponse == null || messageResponse.toString().isEmpty()) {
+        if (Objects.isNull(messageResponse) || messageResponse.toString().isEmpty()) {
             logger.error("response of package size is empty");
             throw new PackageServiceException("response of package size is empty");
         }
@@ -105,5 +103,10 @@ public class PackageServiceImpl implements PackageService {
                 .stream()
                 .map(PackageSize::getDescription)
                 .collect(Collectors.toList());
+    }
+
+    private void handleException(String messageException) {
+        logger.error(messageException);
+        throw new CentralServerException();
     }
 }

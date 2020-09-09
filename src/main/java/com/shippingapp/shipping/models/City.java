@@ -1,6 +1,8 @@
 package com.shippingapp.shipping.models;
 
-public final class City {
+import java.io.Serializable;
+
+public final class City implements Serializable {
     private final int id;
     private final String name;
     private final boolean seaport;

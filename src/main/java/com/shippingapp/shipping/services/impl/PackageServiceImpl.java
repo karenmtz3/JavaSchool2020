@@ -11,6 +11,7 @@ import com.shippingapp.shipping.models.PackageType;
 import com.shippingapp.shipping.services.PackageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,12 +35,12 @@ public class PackageServiceImpl implements PackageService {
 
     public List<String> getDescriptionsForPackageTypes() {
         String message = "{\"type\":\"packageType\"}";
-        Object messageResponse;
+        Object messageResponse = null;
         try {
             messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                     connectionProperties.getRoutingKey(), message);
-        } catch (Exception ex) {
-            throw new CentralServerException("Central server can't get response");
+        } catch (AmqpException ex) {
+            handleException(ex.getMessage());
         }
 
         logger.info("response package type {}", messageResponse);
@@ -72,16 +73,16 @@ public class PackageServiceImpl implements PackageService {
             throw new PackageTypeIsNullOrEmptyException("Error to get package sizes");
         }
         String message = "{\"type\":\"packageSizeByType\",\"packageType\":\"" + packageType + "\"}";
-        Object messageResponse;
+        Object messageResponse = null;
         try {
             messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                     connectionProperties.getRoutingKey(), message);
-        } catch (Exception ex) {
-            throw new CentralServerException("Central server can't get response");
+        } catch (AmqpException ex) {
+            handleException(ex.getMessage());
         }
 
         logger.info("response package size {}", messageResponse);
-        if (messageResponse == null || messageResponse.toString().isEmpty()) {
+        if (Objects.isNull(messageResponse) || messageResponse.toString().isEmpty()) {
             logger.error("response of package size is empty");
             throw new PackageServiceException("response of package size is empty");
         }
@@ -102,5 +103,10 @@ public class PackageServiceImpl implements PackageService {
                 .stream()
                 .map(PackageSize::getDescription)
                 .collect(Collectors.toList());
+    }
+
+    private void handleException(String messageException) {
+        logger.error(messageException);
+        throw new CentralServerException();
     }
 }

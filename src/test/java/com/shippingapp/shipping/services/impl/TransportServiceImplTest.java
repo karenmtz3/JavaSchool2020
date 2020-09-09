@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 public class TransportServiceImplTest {
 
     private String messageType;
+    private String messageVelocity;
 
     private TransportServiceImpl transportService;
     private ConnectionProperties connectionProperties;
@@ -32,6 +33,7 @@ public class TransportServiceImplTest {
         this.connectionProperties = Mockito.mock(ConnectionProperties.class);
 
         messageType = "{\"type\":\"transportType\"}";
+        messageVelocity = "{\"type\":\"transportVelocity\"}";
 
         transportService = new TransportServiceImpl(rabbitTemplate, connectionProperties);
     }
@@ -101,4 +103,72 @@ public class TransportServiceImplTest {
         assertThat(response).isEqualTo(responseExpected);
     }
 
+    @Test
+    public void getDescriptionsForTransportVelocities_SuccessException() {
+        String messageReceived = " [{\"id\":4,\"description\":\"Regular\", priceFactor\":0}," +
+                "{\"id\":5,\"description\":\"Express\",\"priceFactor\":15}," +
+                "{\"id\":6,\"description\":\"Following day\",\"priceFactor\":20}]";
+
+        List<String> responseExpected = Arrays.asList("Regular", "Express", "Following day");
+
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messageVelocity)).thenReturn(messageReceived);
+
+        List<String> response = transportService.getDescriptionForTransportVelocity();
+
+        assertThat(response).isEqualTo(responseExpected);
+    }
+
+    @Test
+    public void getDescriptionsForTransportVelocitiesWithMessageReceivedEmpty_thenThrowTransportServiceException() {
+        String messageReceived = "";
+
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messageVelocity)).thenReturn(messageReceived);
+
+        assertThatExceptionOfType(TransportServiceException.class).isThrownBy(
+                () -> transportService.getDescriptionForTransportVelocity());
+    }
+
+    @Test
+    public void getDescriptionsForTransportVelocitiesWithMessageReceivedNull_thenThrowTransportServiceException() {
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messageVelocity)).thenReturn(null);
+
+        assertThatExceptionOfType(TransportServiceException.class).isThrownBy(
+                () -> transportService.getDescriptionForTransportVelocity());
+    }
+
+    @Test
+    public void getDescriptionsForTransportVelocitiesWithAnyValueNullOfMessageReceived_SuccessExpected() {
+        String messageReceived = " [{\"id\":4,\"description\":\"Regular\", priceFactor\":0}," +
+                "{\"id\":null,\"description\":\"Express\",\"priceFactor\":15}," +
+                "{\"id\":6,\"description\":\"Following day\",\"priceFactor\":20}]";
+
+        List<String> responseExpected = Arrays.asList("Regular", "Following day");
+
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messageVelocity)).thenReturn(messageReceived);
+
+        List<String> response = transportService.getDescriptionForTransportVelocity();
+
+        assertThat(response).isEqualTo(responseExpected);
+    }
+
+    @Test
+    public void getDescriptionsForTransportVelocitiesWithAnyValueEmptyOfMessageReceived_SuccessExpected() {
+        String messageReceived = " [{\"id\":4,\"description\":\"Regular\", priceFactor\":0}," +
+                "{\"id\":5,\"description\":\"Express\",\"priceFactor\":15}," +
+                "{\"id\":6,\"description\":\"\",\"priceFactor\":20}]";
+
+        List<String> responseExpected = Arrays.asList("Regular", "Express");
+
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messageVelocity)).thenReturn(messageReceived);
+
+        List<String> response = transportService.getDescriptionForTransportVelocity();
+
+        assertThat(response).isEqualTo(responseExpected);
+
+    }
 }

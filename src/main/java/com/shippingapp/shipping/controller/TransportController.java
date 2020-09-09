@@ -23,4 +23,9 @@ public class TransportController {
     public ResponseEntity<List<String>> getTransportTypesByPackageSize(@PathVariable String packageSize) {
         return new ResponseEntity<>(transportService.getDescriptionForTransportTypes(), HttpStatus.OK);
     }
+
+    @GetMapping("/time/{transportType}")
+    public ResponseEntity<List<String>> getShippingSpeed(@PathVariable String transportType) {
+        return new ResponseEntity<>(transportService.getDescriptionForTransportVelocity(), HttpStatus.OK);
+    }
 }

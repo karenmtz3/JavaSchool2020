@@ -28,4 +28,9 @@ public class MainExceptionHandler {
     public ResponseEntity<String> handleTransportServiceException(TransportServiceException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
+
+    @ExceptionHandler({CityServiceException.class})
+    public ResponseEntity<String> handleCityServiceException(CityServiceException e){
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
 }

@@ -51,17 +51,17 @@ public class CityControllerTest {
     }
 
     @Test
-    public void whenGetCitiesNames_thenReturnListAnd200Status() throws Exception {
+    public void whenGetCityNames_thenReturnListAnd200Status() throws Exception {
         List<String> expectedList = Arrays.asList("La Paz", "Mexicali", "Hermosillo", "Culiacan", "Tepic");
 
-        when(cityService.getCitiesNames()).thenReturn(expectedList);
+        when(cityService.getCityNames()).thenReturn(expectedList);
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.get("/city"))
                 .andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        verify(cityService).getCitiesNames();
+        verify(cityService).getCityNames();
 
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(), CITIES_NAMES_REFERENCE);
 
@@ -69,15 +69,15 @@ public class CityControllerTest {
     }
 
     @Test
-    public void whenGetCitiesNames_thenReturnEmptyListAnd200Status() throws Exception {
-        when(cityService.getCitiesNames()).thenReturn(new ArrayList<>());
+    public void whenGetCityNames_thenReturnEmptyListAnd200Status() throws Exception {
+        when(cityService.getCityNames()).thenReturn(new ArrayList<>());
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.get("/city"))
                 .andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        verify(cityService).getCitiesNames();
+        verify(cityService).getCityNames();
 
         List<String> receivedList = objectMapper.readValue(response.getContentAsString(), CITIES_NAMES_REFERENCE);
 
@@ -85,8 +85,8 @@ public class CityControllerTest {
     }
 
     @Test
-    public void givenInvalidResponse_whenGetCitiesNames_thenRejectWith409Status() throws Exception {
-        when(cityService.getCitiesNames()).thenThrow(
+    public void givenInvalidResponse_whenGetCityNames_thenRejectWith409Status() throws Exception {
+        when(cityService.getCityNames()).thenThrow(
                 new CityServiceException("Error to get cities"));
 
         MockHttpServletResponse response = mockMvc.perform(
@@ -97,8 +97,8 @@ public class CityControllerTest {
     }
 
     @Test
-    public void whenGetCitiesNames_thenCentralCommunicationFailsRejectWith417Status() throws Exception {
-        when(cityService.getCitiesNames()).thenThrow(
+    public void whenGetCityNames_thenCentralCommunicationFailsRejectWith417Status() throws Exception {
+        when(cityService.getCityNames()).thenThrow(
                 new CentralServerException());
 
         MockHttpServletResponse response = mockMvc.perform(

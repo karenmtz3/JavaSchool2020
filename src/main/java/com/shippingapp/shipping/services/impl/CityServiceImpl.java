@@ -14,12 +14,18 @@ import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 @Service
 public class CityServiceImpl implements CityService {
     private static final Logger logger = LoggerFactory.getLogger(CityServiceImpl.class);
+
+    private static final String MESSAGE_CITY = "{\"type\":\"city\"}";
     private static final Type CITY_REFERENCE = new TypeReference<List<City>>() {
     }.getType();
 
@@ -33,12 +39,11 @@ public class CityServiceImpl implements CityService {
         this.connectionProperties = connectionProperties;
     }
 
-    public List<String> getCitiesNames() {
-        String message = "{\"type\":\"city\"}";
+    public List<String> getCityNames() {
         Object messageResponse;
         try {
             messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
-                    connectionProperties.getRoutingKey(), message);
+                    connectionProperties.getRoutingKey(), MESSAGE_CITY);
         } catch (AmqpException ex) {
             logger.error(ex.getMessage());
             throw new CentralServerException();
@@ -49,12 +54,12 @@ public class CityServiceImpl implements CityService {
             throw new CityServiceException("response of cities is empty or null");
         }
         List<City> cities = gson.fromJson(messageResponse.toString(), CITY_REFERENCE);
-        return getCitiesNamesList(cities);
+        return getCityNamesList(cities);
     }
 
-    private List<String> getCitiesNamesList(List<City> cities) {
-        Set<City> citiesFiltered = new HashSet<>(cities);
-        return citiesFiltered
+    private List<String> getCityNamesList(List<City> cities) {
+        Set<City> filteredCities = new HashSet<>(cities);
+        return filteredCities
                 .stream()
                 .sorted(Comparator.comparing(City::getName))
                 .filter(city -> city.getId() != 0 && !city.getName().isEmpty())

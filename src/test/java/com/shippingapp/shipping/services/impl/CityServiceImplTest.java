@@ -2,6 +2,7 @@ package com.shippingapp.shipping.services.impl;
 
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.CityServiceException;
+import com.shippingapp.shipping.services.CityService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,7 +21,7 @@ import static org.mockito.Mockito.when;
 public class CityServiceImplTest {
     private String messageCity;
 
-    private CityServiceImpl cityService;
+    private CityService cityService;
     private ConnectionProperties connectionProperties;
     private AmqpTemplate rabbitTemplate;
 
@@ -35,7 +36,7 @@ public class CityServiceImplTest {
     }
 
     @Test
-    public void getCitiesNames_SuccessExpected() {
+    public void getCityNames_SuccessExpected() {
         String messageReceived = " [{\"id\":33,\"name\":\"La Paz\",\"tax\":10,\"seaport\":true,\"airport\":true}," +
                 "{\"id\":34,\"name\":\"Mexicali\",\"tax\":5,\"seaport\":false,\"airport\":true}," +
                 "{\"id\":35,\"name\":\"Hermosillo\",\"tax\":15,\"seaport\":false,\"airport\":true}," +
@@ -47,33 +48,33 @@ public class CityServiceImplTest {
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageCity)).thenReturn(messageReceived);
 
-        List<String> response = cityService.getCitiesNames();
+        List<String> response = cityService.getCityNames();
 
         assertThat(response).isEqualTo(responseExpected);
     }
 
     @Test
-    public void getCitiesNamesWithMessageReceivedEmpty_thenThrowCityServiceException() {
+    public void getCityNamesWithMessageReceivedEmpty_thenThrowCityServiceException() {
         String messageReceived = "";
 
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageCity)).thenReturn(messageReceived);
 
         assertThatExceptionOfType(CityServiceException.class).isThrownBy(
-                () -> cityService.getCitiesNames());
+                () -> cityService.getCityNames());
     }
 
     @Test
-    public void getCitiesNamesWithMessageReceivedNull_thenThrowCityServiceException() {
+    public void getCityNamesWithMessageReceivedNull_thenThrowCityServiceException() {
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageCity)).thenReturn(null);
 
         assertThatExceptionOfType(CityServiceException.class).isThrownBy(
-                () -> cityService.getCitiesNames());
+                () -> cityService.getCityNames());
     }
 
     @Test
-    public void getCitiesNamesWithAnyValueNullOfMessageReceived_SuccessExpected() {
+    public void getCityNamesWithAnyValueNullOfMessageReceived_SuccessExpected() {
         String messageReceived = " [{\"id\":null,\"name\":\"La Paz\",\"tax\":10,\"seaport\":true,\"airport\":true}," +
                 "{\"id\":34,\"name\":\"Mexicali\",\"tax\":5,\"seaport\":false,\"airport\":true}," +
                 "{\"id\":35,\"name\":\"Hermosillo\",\"tax\":15,\"seaport\":false,\"airport\":true}," +
@@ -85,13 +86,13 @@ public class CityServiceImplTest {
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageCity)).thenReturn(messageReceived);
 
-        List<String> response = cityService.getCitiesNames();
+        List<String> response = cityService.getCityNames();
 
         assertThat(response).isEqualTo(responseExpected);
     }
 
     @Test
-    public void getCitiesNamesWithAnyValueEmptyOfMessageReceived_SuccessExpected() {
+    public void getCityNamesWithAnyValueEmptyOfMessageReceived_SuccessExpected() {
         String messageReceived = " [{\"id\":33,\"name\":\"La Paz\",\"tax\":10,\"seaport\":true,\"airport\":true}," +
                 "{\"id\":34,\"name\":\"\",\"tax\":5,\"seaport\":false,\"airport\":true}," +
                 "{\"id\":35,\"name\":\"Hermosillo\",\"tax\":15,\"seaport\":false,\"airport\":true}," +
@@ -103,7 +104,7 @@ public class CityServiceImplTest {
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageCity)).thenReturn(messageReceived);
 
-        List<String> response = cityService.getCitiesNames();
+        List<String> response = cityService.getCityNames();
 
         assertThat(response).isEqualTo(responseExpected);
     }

@@ -2,10 +2,13 @@ package com.shippingapp.shipping.services.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
+import com.shippingapp.shipping.component.DfsFindPaths;
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.CentralServerException;
 import com.shippingapp.shipping.exception.CityServiceException;
+import com.shippingapp.shipping.exception.OriginAndDestinationAreEqualsException;
 import com.shippingapp.shipping.models.City;
+import com.shippingapp.shipping.models.CityPath;
 import com.shippingapp.shipping.services.CityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +31,8 @@ public class CityServiceImpl implements CityService {
     private static final String MESSAGE_CITY = "{\"type\":\"city\"}";
     private static final Type CITY_REFERENCE = new TypeReference<List<City>>() {
     }.getType();
+    private static final Type CITY_PATH_REFERENCE = new TypeReference<List<CityPath>>() {
+    }.getType();
 
     private final AmqpTemplate rabbitTemplate;
     private final ConnectionProperties connectionProperties;
@@ -40,13 +45,12 @@ public class CityServiceImpl implements CityService {
     }
 
     public List<String> getCityNames() {
-        Object messageResponse;
+        Object messageResponse = null;
         try {
             messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                     connectionProperties.getRoutingKey(), MESSAGE_CITY);
         } catch (AmqpException ex) {
-            logger.error(ex.getMessage());
-            throw new CentralServerException();
+            handleException(ex.getMessage());
         }
 
         if (Objects.isNull(messageResponse) || messageResponse.toString().isEmpty()) {
@@ -65,5 +69,38 @@ public class CityServiceImpl implements CityService {
                 .filter(city -> city.getId() != 0 && !city.getName().isEmpty())
                 .map(City::getName)
                 .collect(Collectors.toList());
+    }
+
+    public String getFirstPath(String origin, String destination) {
+        if (!origin.equals(destination)) {
+            String message = "{\"type\":\"routesList\"," +
+                    "\"origin\":\"" + origin + "\",\"destination\":\"" + destination + "\"}";
+
+            Object messageResponse = null;
+            try {
+                messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                        connectionProperties.getRoutingKey(), message);
+            } catch (Exception ex) {
+                handleException(ex.getMessage());
+            }
+
+            if (Objects.isNull(messageResponse) || messageResponse.toString().isEmpty()) {
+                logger.error("response of city path is empty or null");
+                throw new CityServiceException("response of city path is empty or null");
+            }
+            List<CityPath> cityPaths = gson.fromJson(messageResponse.toString(), CITY_PATH_REFERENCE);
+            DfsFindPaths dfsFindPaths = new DfsFindPaths();
+            dfsFindPaths.setCityPaths(cityPaths);
+            dfsFindPaths.setOrigin(origin);
+            dfsFindPaths.setDestination(destination);
+
+            return dfsFindPaths.getFirstPathFromOriginToDestination();
+        }
+        throw new OriginAndDestinationAreEqualsException("Cities must be different");
+    }
+
+    private void handleException(String messageException) {
+        logger.error(messageException);
+        throw new CentralServerException();
     }
 }

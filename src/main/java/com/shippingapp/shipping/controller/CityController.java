@@ -1,11 +1,10 @@
 package com.shippingapp.shipping.controller;
 
+import com.shippingapp.shipping.models.CityDTO;
 import com.shippingapp.shipping.services.CityService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -21,5 +20,10 @@ public class CityController {
     @GetMapping("/city")
     public ResponseEntity<List<String>> getCityNames() {
         return new ResponseEntity<>(cityService.getCityNames(), HttpStatus.OK);
+    }
+
+    @PostMapping("/cityPath")
+    public ResponseEntity<String> getPathFromOriginCityToDestinationCity(@RequestBody CityDTO cityDTO) {
+        return new ResponseEntity<>(cityService.getFirstPath(cityDTO.getOrigin(), cityDTO.getDestination()), HttpStatus.OK);
     }
 }

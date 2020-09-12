@@ -20,6 +20,10 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class CityServiceImplTest {
     private String messageCity;
+    private String messagePath;
+
+    private final static String ORIGIN = "Chihuahua";
+    private final static String DESTINATION = "Ciudad de Mexico";
 
     private CityService cityService;
     private ConnectionProperties connectionProperties;
@@ -31,6 +35,7 @@ public class CityServiceImplTest {
         this.connectionProperties = Mockito.mock(ConnectionProperties.class);
 
         messageCity = "{\"type\":\"city\"}";
+        messagePath = "{\"type\":\"routesList\",\"origin\":\"Chihuahua\",\"destination\":\"Ciudad de Mexico\"}";
 
         cityService = new CityServiceImpl(rabbitTemplate, connectionProperties);
     }
@@ -107,5 +112,50 @@ public class CityServiceImplTest {
         List<String> response = cityService.getCityNames();
 
         assertThat(response).isEqualTo(responseExpected);
+    }
+
+    @Test
+    public void getFirstPath_SuccessExpected() {
+        String messageReceived = "[{\"from\":\"Guadalajara\",\"to\":\"Villahermosa\",\"distance\":\"58\"}," +
+                "{\"from\":\"Ciudad del Carmen\",\"to\":\"Ciudad de Mexico\",\"distance\":\"30\"}," +
+                "{\"from\":\"Cancun\",\"to\":\"Toluca\",\"distance\":\"28\"}," +
+                "{\"from\":\"Torreon\",\"to\":\"Xalapa\",\"distance\":\"26\"}," +
+                "{\"from\":\"Chihuahua\",\"to\":\"Cancun\",\"distance\":\"70\"}," +
+                "{\"from\":\"Durango\",\"to\":\"Oaxaca\",\"distance\":\"78\"}," +
+                "{\"from\":\"Tlaxcala\",\"to\":\"Ciudad de Mexico\",\"distance\":\"23\"}," +
+                "{\"from\":\"Tlaxcala\",\"to\":\"Zacatecas\",\"distance\":\"79\"}," +
+                "{\"from\":\"Merida\",\"to\":\"Ciudad de Mexico\",\"distance\":\"26\"}," +
+                "{\"from\":\"San Luis Potosi\",\"to\":\"Ciudad de Mexico\",\"distance\":\"94\"}," +
+                "{\"from\":\"Acapulco\",\"to\":\"Ciudad de Mexico\",\"distance\":\"72\"}," +
+                "{\"from\":\"Toluca\",\"to\":\"Tlaxcala\",\"distance\":\"97\"}]";
+
+        String pathExpected = "Chihuahua -> Cancun -> Toluca -> Tlaxcala -> Ciudad de Mexico";
+
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
+
+        String response = cityService.getFirstPath(ORIGIN, DESTINATION);
+
+        assertThat(response).isEqualTo(pathExpected);
+    }
+
+    @Test
+    public void getFirstPathWithMessageReceivedEmpty_thenThrowCityServiceException() {
+        String messageReceived = "";
+
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
+
+        assertThatExceptionOfType(CityServiceException.class).isThrownBy(
+                () -> cityService.getFirstPath(ORIGIN, DESTINATION));
+    }
+
+    @Test
+    public void getFirstPathWithMessageReceivedNull_thenThrowCityServiceException() {
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messagePath)).thenReturn(null);
+
+        assertThatExceptionOfType(CityServiceException.class).isThrownBy(
+                () -> cityService.getFirstPath(ORIGIN, DESTINATION));
     }
 }

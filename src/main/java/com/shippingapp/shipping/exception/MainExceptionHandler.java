@@ -33,4 +33,8 @@ public class MainExceptionHandler {
     public ResponseEntity<String> handleCityServiceException(CityServiceException e){
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
+    @ExceptionHandler({OriginAndDestinationAreEqualsException.class})
+    public ResponseEntity<String> handleOriginAndDestinationAreEqualsException(OriginAndDestinationAreEqualsException e){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
 }

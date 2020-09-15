@@ -8,6 +8,7 @@ import com.shippingapp.shipping.exception.CentralServerException;
 import com.shippingapp.shipping.exception.CityServiceException;
 import com.shippingapp.shipping.exception.OriginAndDestinationAreEqualsException;
 import com.shippingapp.shipping.models.City;
+import com.shippingapp.shipping.models.CityDTO;
 import com.shippingapp.shipping.models.CityPath;
 import com.shippingapp.shipping.services.CityService;
 import org.slf4j.Logger;
@@ -29,6 +30,8 @@ public class CityServiceImpl implements CityService {
     private static final Logger logger = LoggerFactory.getLogger(CityServiceImpl.class);
 
     private static final String MESSAGE_CITY = "{\"type\":\"city\"}";
+    private static final String MESSAGE_CITY_PATH = "{\"type\":\"routesList\"," +
+            "\"origin\":\"%1$s\",\"destination\":\"%2$s\"}";
     private static final Type CITY_REFERENCE = new TypeReference<List<City>>() {
     }.getType();
     private static final Type CITY_PATH_REFERENCE = new TypeReference<List<CityPath>>() {
@@ -71,10 +74,10 @@ public class CityServiceImpl implements CityService {
                 .collect(Collectors.toList());
     }
 
-    public String getFirstPath(String origin, String destination) {
-        if (!origin.equals(destination)) {
-            String message = "{\"type\":\"routesList\"," +
-                    "\"origin\":\"" + origin + "\",\"destination\":\"" + destination + "\"}";
+    public String getFirstPath(CityDTO cityDTO) {
+        if (!cityDTO.getOrigin().equals(cityDTO.getDestination())) {
+            String message = String.format(MESSAGE_CITY_PATH,
+                    cityDTO.getOrigin(), cityDTO.getDestination());
 
             Object messageResponse = null;
             try {
@@ -90,11 +93,8 @@ public class CityServiceImpl implements CityService {
             }
             List<CityPath> cityPaths = gson.fromJson(messageResponse.toString(), CITY_PATH_REFERENCE);
             DfsFindPaths dfsFindPaths = new DfsFindPaths();
-            dfsFindPaths.setCityPaths(cityPaths);
-            dfsFindPaths.setOrigin(origin);
-            dfsFindPaths.setDestination(destination);
 
-            return dfsFindPaths.getFirstPathFromOriginToDestination();
+            return dfsFindPaths.getFirstPathFromOriginToDestination(cityPaths, cityDTO.getOrigin(), cityDTO.getDestination());
         }
         throw new OriginAndDestinationAreEqualsException("Cities must be different");
     }

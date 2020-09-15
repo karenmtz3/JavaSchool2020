@@ -3,41 +3,32 @@ package com.shippingapp.shipping.component;
 import com.shippingapp.shipping.models.CityPath;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Objects;
 
 @Component
 public class DfsFindPaths {
     private final Map<String, Set<String>> graph = new HashMap<>();
-    private List<CityPath> cityPaths;
-    private String origin;
-    private String destination;
 
-    public void setCityPaths(List<CityPath> cityPaths) {
-        this.cityPaths = cityPaths;
-    }
-
-    public void setOrigin(String origin) {
-        this.origin = origin;
-    }
-
-    public void setDestination(String destination) {
-        this.destination = destination;
-    }
-
-    public String getFirstPathFromOriginToDestination() {
-        generateGraph();
+    public String getFirstPathFromOriginToDestination(List<CityPath> cityPaths, String origin, String destination) {
+        generateGraph(cityPaths);
 
         List<List<String>> paths = new ArrayList<>();
         List<String> visited = new ArrayList<>();
         visited.add(origin);
-        findAllPaths(visited, paths, origin);
+        findAllPaths(visited, paths, origin, destination);
 
         return String.join(" -> ", paths
                 .stream()
                 .findFirst().get());
     }
 
-    private void findAllPaths(List<String> visited, List<List<String>> paths, String origin) {
+    private void findAllPaths(List<String> visited, List<List<String>> paths, String origin, String destination) {
         if (origin.equals(destination)) {
             paths.add(visited);
         } else {
@@ -48,12 +39,12 @@ public class DfsFindPaths {
                 }
                 List<String> routeList = new ArrayList<>(visited);
                 routeList.add(city);
-                findAllPaths(routeList, paths, city);
+                findAllPaths(routeList, paths, city, destination);
             }
         }
     }
 
-    private void generateGraph() {
+    private void generateGraph(List<CityPath> cityPaths) {
         cityPaths.forEach(cityPath -> addEdge(cityPath.getFrom(), cityPath.getTo()));
     }
 
@@ -64,7 +55,7 @@ public class DfsFindPaths {
 
     private Set<String> adjacentCities(String origin) {
         Set<String> adjacent = graph.get(origin);
-        if (adjacent == null) {
+        if (Objects.isNull(adjacent)) {
             return new HashSet<>();
         }
         return new HashSet<>(adjacent);

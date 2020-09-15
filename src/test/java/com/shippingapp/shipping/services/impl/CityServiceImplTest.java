@@ -1,7 +1,9 @@
 package com.shippingapp.shipping.services.impl;
 
+import com.google.gson.Gson;
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.CityServiceException;
+import com.shippingapp.shipping.models.CityDTO;
 import com.shippingapp.shipping.services.CityService;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,9 +23,13 @@ import static org.mockito.Mockito.when;
 public class CityServiceImplTest {
     private String messageCity;
     private String messagePath;
+    private CityDTO cityDTO;
 
+    private static final Gson gson = new Gson();
     private final static String ORIGIN = "Chihuahua";
     private final static String DESTINATION = "Ciudad de Mexico";
+    private static final String VALID_CITIES = "{\"origin\":\"Chihuahua\", \"destination\":\"Ciudad de Mexico\"}";
+
 
     private CityService cityService;
     private ConnectionProperties connectionProperties;
@@ -36,7 +42,7 @@ public class CityServiceImplTest {
 
         messageCity = "{\"type\":\"city\"}";
         messagePath = "{\"type\":\"routesList\",\"origin\":\"Chihuahua\",\"destination\":\"Ciudad de Mexico\"}";
-
+        cityDTO = gson.fromJson(VALID_CITIES, CityDTO.class);
         cityService = new CityServiceImpl(rabbitTemplate, connectionProperties);
     }
 
@@ -134,7 +140,7 @@ public class CityServiceImplTest {
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
 
-        String response = cityService.getFirstPath(ORIGIN, DESTINATION);
+        String response = cityService.getFirstPath(cityDTO);
 
         assertThat(response).isEqualTo(pathExpected);
     }
@@ -147,7 +153,7 @@ public class CityServiceImplTest {
                 connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
 
         assertThatExceptionOfType(CityServiceException.class).isThrownBy(
-                () -> cityService.getFirstPath(ORIGIN, DESTINATION));
+                () -> cityService.getFirstPath(cityDTO));
     }
 
     @Test
@@ -156,6 +162,6 @@ public class CityServiceImplTest {
                 connectionProperties.getRoutingKey(), messagePath)).thenReturn(null);
 
         assertThatExceptionOfType(CityServiceException.class).isThrownBy(
-                () -> cityService.getFirstPath(ORIGIN, DESTINATION));
+                () -> cityService.getFirstPath(cityDTO));
     }
 }

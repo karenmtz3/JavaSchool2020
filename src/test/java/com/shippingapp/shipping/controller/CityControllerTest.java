@@ -12,6 +12,7 @@ import org.assertj.core.api.AssertionsForInterfaceTypes;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -120,8 +122,8 @@ public class CityControllerTest {
     public void givenValidCities_whenGetPathFromOriginCityToDestinationCity_thenReturnPathAnd200Status() throws Exception {
 
         String path = "Chihuahua -> Oaxaca -> Tampico -> Tuxtla Gutierrez -> Ciudad de Mexico";
-        CityDTO cityDTO = gson.fromJson(VALID_CITIES, CityDTO.class);
-        when(cityService.getFirstPath(cityDTO.getOrigin(), cityDTO.getDestination())).thenReturn(path);
+        ArgumentCaptor<CityDTO> cityDTOCaptor = ArgumentCaptor.forClass(CityDTO.class);
+        when(cityService.getFirstPath(any(CityDTO.class))).thenReturn(path);
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.post("/cityPath")
@@ -129,15 +131,14 @@ public class CityControllerTest {
                         .content(VALID_CITIES)).andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        verify(cityService).getFirstPath(cityDTO.getOrigin(), cityDTO.getDestination());
+        verify(cityService).getFirstPath(cityDTOCaptor.capture());
 
         assertThat(response.getContentAsString()).isEqualTo(path);
     }
 
     @Test
     public void givenInvalidCities_whenGetPathFromOriginCityToDestinationCity_thenReject400Status() throws Exception {
-        CityDTO cityDTO = gson.fromJson(INVALID_CITIES, CityDTO.class);
-        when(cityService.getFirstPath(cityDTO.getOrigin(), cityDTO.getDestination())).thenThrow(
+        when(cityService.getFirstPath(any(CityDTO.class))).thenThrow(
                 new OriginAndDestinationAreEqualsException("Cities must be different"));
 
         MockHttpServletResponse response = mockMvc.perform(
@@ -150,8 +151,7 @@ public class CityControllerTest {
 
     @Test
     public void whenGetPathFromOriginCityToDestinationCity_thenCentralCommunicationFailsRejectWith417Status() throws Exception {
-        CityDTO cityDTO = gson.fromJson(VALID_CITIES, CityDTO.class);
-        when(cityService.getFirstPath(cityDTO.getOrigin(), cityDTO.getDestination())).thenThrow(
+        when(cityService.getFirstPath(any(CityDTO.class))).thenThrow(
                 new CentralServerException());
 
         MockHttpServletResponse response = mockMvc.perform(

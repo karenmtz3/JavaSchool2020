@@ -1,8 +1,9 @@
 package com.shippingapp.shipping.models;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public final class TransportType {
+public final class TransportType implements Serializable {
     private final int id;
     private final String description;
     private final int pricePerMile;

@@ -13,47 +13,46 @@ import java.util.Objects;
 
 @Component
 public class DfsFindPaths {
-    private final Map<String, Set<String>> graph = new HashMap<>();
 
     public String getFirstPathFromOriginToDestination(List<CityPath> cityPaths, String origin, String destination) {
-        generateGraph(cityPaths);
+        Map<String, Set<String>> graph = new HashMap<>();
+        generateGraph(graph, cityPaths);
 
         List<List<String>> paths = new ArrayList<>();
         List<String> visited = new ArrayList<>();
         visited.add(origin);
-        findAllPaths(visited, paths, origin, destination);
+
+        findAllPaths(graph, visited, paths, origin, destination);
 
         return String.join(" -> ", paths
                 .stream()
                 .findFirst().get());
     }
 
-    private void findAllPaths(List<String> visited, List<List<String>> paths, String origin, String destination) {
+    private void findAllPaths(Map<String, Set<String>> graph, List<String> visited, List<List<String>> paths, String origin, String destination) {
         if (origin.equals(destination)) {
             paths.add(visited);
         } else {
-            Set<String> adjacent = adjacentCities(origin);
+            Set<String> adjacent = adjacentCities(graph, origin);
             for (String city : adjacent) {
                 if (visited.contains(city)) {
                     continue;
                 }
                 List<String> routeList = new ArrayList<>(visited);
                 routeList.add(city);
-                findAllPaths(routeList, paths, city, destination);
+                findAllPaths(graph, routeList, paths, city, destination);
             }
         }
     }
 
-    private void generateGraph(List<CityPath> cityPaths) {
-        cityPaths.forEach(cityPath -> addEdge(cityPath.getFrom(), cityPath.getTo()));
+    private void generateGraph(Map<String, Set<String>> graph, List<CityPath> cityPaths) {
+        cityPaths.forEach(cityPath -> {
+            Set<String> adjacent = graph.computeIfAbsent(cityPath.getFrom(), k -> new HashSet<>());
+            adjacent.add(cityPath.getTo());
+        });
     }
 
-    private void addEdge(String origin, String destination) {
-        Set<String> adjacent = graph.computeIfAbsent(origin, k -> new HashSet<>());
-        adjacent.add(destination);
-    }
-
-    private Set<String> adjacentCities(String origin) {
+    private Set<String> adjacentCities(Map<String, Set<String>> graph, String origin) {
         Set<String> adjacent = graph.get(origin);
         if (Objects.isNull(adjacent)) {
             return new HashSet<>();

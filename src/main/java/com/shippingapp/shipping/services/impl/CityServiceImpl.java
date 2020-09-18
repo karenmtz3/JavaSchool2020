@@ -31,7 +31,7 @@ public class CityServiceImpl implements CityService {
 
     private static final String MESSAGE_CITY = "{\"type\":\"city\"}";
     private static final String MESSAGE_CITY_PATH = "{\"type\":\"routesList\"," +
-            "\"origin\":\"%1$s\",\"destination\":\"%2$s\"}";
+            "\"origin\":\"%s\",\"destination\":\"%s\"}";
     private static final Type CITY_REFERENCE = new TypeReference<List<City>>() {
     }.getType();
     private static final Type CITY_PATH_REFERENCE = new TypeReference<List<CityPath>>() {
@@ -39,12 +39,13 @@ public class CityServiceImpl implements CityService {
 
     private final AmqpTemplate rabbitTemplate;
     private final ConnectionProperties connectionProperties;
-
+    private final DfsFindPaths dfsFindPaths;
     private static final Gson gson = new Gson();
 
-    public CityServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties) {
+    public CityServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties, DfsFindPaths dfsFindPaths) {
         this.rabbitTemplate = rabbitTemplate;
         this.connectionProperties = connectionProperties;
+        this.dfsFindPaths = dfsFindPaths;
     }
 
     public List<String> getCityNames() {
@@ -92,7 +93,6 @@ public class CityServiceImpl implements CityService {
                 throw new CityServiceException("response of city path is empty or null");
             }
             List<CityPath> cityPaths = gson.fromJson(messageResponse.toString(), CITY_PATH_REFERENCE);
-            DfsFindPaths dfsFindPaths = new DfsFindPaths();
 
             return dfsFindPaths.getFirstPathFromOriginToDestination(cityPaths, cityDTO.getOrigin(), cityDTO.getDestination());
         }

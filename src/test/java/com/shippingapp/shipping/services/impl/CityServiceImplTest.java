@@ -1,6 +1,7 @@
 package com.shippingapp.shipping.services.impl;
 
 import com.google.gson.Gson;
+import com.shippingapp.shipping.component.DfsFindPaths;
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.CityServiceException;
 import com.shippingapp.shipping.models.CityDTO;
@@ -39,11 +40,12 @@ public class CityServiceImplTest {
     public void setUp() {
         this.rabbitTemplate = Mockito.mock(AmqpTemplate.class);
         this.connectionProperties = Mockito.mock(ConnectionProperties.class);
+        DfsFindPaths dfsFindPaths = new DfsFindPaths();
 
         messageCity = "{\"type\":\"city\"}";
         messagePath = "{\"type\":\"routesList\",\"origin\":\"Chihuahua\",\"destination\":\"Ciudad de Mexico\"}";
         cityDTO = gson.fromJson(VALID_CITIES, CityDTO.class);
-        cityService = new CityServiceImpl(rabbitTemplate, connectionProperties);
+        cityService = new CityServiceImpl(rabbitTemplate, connectionProperties, dfsFindPaths);
     }
 
     @Test

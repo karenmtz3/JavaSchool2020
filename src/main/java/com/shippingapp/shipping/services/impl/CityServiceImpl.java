@@ -2,10 +2,14 @@ package com.shippingapp.shipping.services.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
+import com.shippingapp.shipping.component.DfsFindPaths;
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.CentralServerException;
 import com.shippingapp.shipping.exception.CityServiceException;
+import com.shippingapp.shipping.exception.OriginAndDestinationAreEqualsException;
 import com.shippingapp.shipping.models.City;
+import com.shippingapp.shipping.models.CityDTO;
+import com.shippingapp.shipping.models.CityPath;
 import com.shippingapp.shipping.services.CityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,27 +30,31 @@ public class CityServiceImpl implements CityService {
     private static final Logger logger = LoggerFactory.getLogger(CityServiceImpl.class);
 
     private static final String MESSAGE_CITY = "{\"type\":\"city\"}";
+    private static final String MESSAGE_CITY_PATH = "{\"type\":\"routesList\"," +
+            "\"origin\":\"%s\",\"destination\":\"%s\"}";
     private static final Type CITY_REFERENCE = new TypeReference<List<City>>() {
+    }.getType();
+    private static final Type CITY_PATH_REFERENCE = new TypeReference<List<CityPath>>() {
     }.getType();
 
     private final AmqpTemplate rabbitTemplate;
     private final ConnectionProperties connectionProperties;
-
+    private final DfsFindPaths dfsFindPaths;
     private static final Gson gson = new Gson();
 
-    public CityServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties) {
+    public CityServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties, DfsFindPaths dfsFindPaths) {
         this.rabbitTemplate = rabbitTemplate;
         this.connectionProperties = connectionProperties;
+        this.dfsFindPaths = dfsFindPaths;
     }
 
     public List<String> getCityNames() {
-        Object messageResponse;
+        Object messageResponse = null;
         try {
             messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                     connectionProperties.getRoutingKey(), MESSAGE_CITY);
         } catch (AmqpException ex) {
-            logger.error(ex.getMessage());
-            throw new CentralServerException();
+            handleException(ex.getMessage());
         }
 
         if (Objects.isNull(messageResponse) || messageResponse.toString().isEmpty()) {
@@ -65,5 +73,34 @@ public class CityServiceImpl implements CityService {
                 .filter(city -> city.getId() != 0 && !city.getName().isEmpty())
                 .map(City::getName)
                 .collect(Collectors.toList());
+    }
+
+    public String getFirstPath(CityDTO cityDTO) {
+        if (!cityDTO.getOrigin().equals(cityDTO.getDestination())) {
+            String message = String.format(MESSAGE_CITY_PATH,
+                    cityDTO.getOrigin(), cityDTO.getDestination());
+
+            Object messageResponse = null;
+            try {
+                messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                        connectionProperties.getRoutingKey(), message);
+            } catch (Exception ex) {
+                handleException(ex.getMessage());
+            }
+
+            if (Objects.isNull(messageResponse) || messageResponse.toString().isEmpty()) {
+                logger.error("response of city path is empty or null");
+                throw new CityServiceException("response of city path is empty or null");
+            }
+            List<CityPath> cityPaths = gson.fromJson(messageResponse.toString(), CITY_PATH_REFERENCE);
+
+            return dfsFindPaths.getFirstPathFromOriginToDestination(cityPaths, cityDTO.getOrigin(), cityDTO.getDestination());
+        }
+        throw new OriginAndDestinationAreEqualsException("Cities must be different");
+    }
+
+    private void handleException(String messageException) {
+        logger.error(messageException);
+        throw new CentralServerException();
     }
 }

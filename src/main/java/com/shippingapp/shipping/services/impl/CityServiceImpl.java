@@ -3,8 +3,8 @@ package com.shippingapp.shipping.services.impl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
 import com.shippingapp.shipping.component.DfsFindPaths;
+import com.shippingapp.shipping.component.Request;
 import com.shippingapp.shipping.config.ConnectionProperties;
-import com.shippingapp.shipping.exception.CentralServerException;
 import com.shippingapp.shipping.exception.CityServiceException;
 import com.shippingapp.shipping.exception.OriginAndDestinationAreEqualsException;
 import com.shippingapp.shipping.models.City;
@@ -13,7 +13,6 @@ import com.shippingapp.shipping.models.CityPath;
 import com.shippingapp.shipping.services.CityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Service;
 
@@ -37,30 +36,19 @@ public class CityServiceImpl implements CityService {
     private static final Type CITY_PATH_REFERENCE = new TypeReference<List<CityPath>>() {
     }.getType();
 
-    private final AmqpTemplate rabbitTemplate;
-    private final ConnectionProperties connectionProperties;
+    private final Request request;
     private final DfsFindPaths dfsFindPaths;
     private static final Gson gson = new Gson();
 
     public CityServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties, DfsFindPaths dfsFindPaths) {
-        this.rabbitTemplate = rabbitTemplate;
-        this.connectionProperties = connectionProperties;
+        request = new Request(connectionProperties, rabbitTemplate);
         this.dfsFindPaths = dfsFindPaths;
     }
 
     public List<String> getCityNames() {
-        Object messageResponse = null;
-        try {
-            messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
-                    connectionProperties.getRoutingKey(), MESSAGE_CITY);
-        } catch (AmqpException ex) {
-            handleException(ex.getMessage());
-        }
+        Object messageResponse = request.sendRequestAndReceiveResponse(MESSAGE_CITY);
+        verifyResponse(messageResponse, MESSAGE_CITY);
 
-        if (Objects.isNull(messageResponse) || messageResponse.toString().isEmpty()) {
-            logger.error("response of cities is empty or null");
-            throw new CityServiceException("response of cities is empty or null");
-        }
         List<City> cities = gson.fromJson(messageResponse.toString(), CITY_REFERENCE);
         return getCityNamesList(cities);
     }
@@ -80,18 +68,8 @@ public class CityServiceImpl implements CityService {
             String message = String.format(MESSAGE_CITY_PATH,
                     cityDTO.getOrigin(), cityDTO.getDestination());
 
-            Object messageResponse = null;
-            try {
-                messageResponse = rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
-                        connectionProperties.getRoutingKey(), message);
-            } catch (Exception ex) {
-                handleException(ex.getMessage());
-            }
-
-            if (Objects.isNull(messageResponse) || messageResponse.toString().isEmpty()) {
-                logger.error("response of city path is empty or null");
-                throw new CityServiceException("response of city path is empty or null");
-            }
+            Object messageResponse = request.sendRequestAndReceiveResponse(message);
+            verifyResponse(messageResponse, MESSAGE_CITY_PATH);
             List<CityPath> cityPaths = gson.fromJson(messageResponse.toString(), CITY_PATH_REFERENCE);
 
             return dfsFindPaths.getFirstPathFromOriginToDestination(cityPaths, cityDTO.getOrigin(), cityDTO.getDestination());
@@ -99,8 +77,10 @@ public class CityServiceImpl implements CityService {
         throw new OriginAndDestinationAreEqualsException("Cities must be different");
     }
 
-    private void handleException(String messageException) {
-        logger.error(messageException);
-        throw new CentralServerException();
+    private void verifyResponse(Object messageResponse, String type) {
+        if (Objects.isNull(messageResponse) || messageResponse.toString().isEmpty()) {
+            logger.error("Response of {} is empty or null", type);
+            throw new CityServiceException("response is empty or null");
+        }
     }
 }

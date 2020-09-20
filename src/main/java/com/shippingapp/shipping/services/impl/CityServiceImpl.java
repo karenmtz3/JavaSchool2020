@@ -5,7 +5,6 @@ import com.google.gson.Gson;
 import com.shippingapp.shipping.component.DfsFindPaths;
 import com.shippingapp.shipping.component.Request;
 import com.shippingapp.shipping.config.ConnectionProperties;
-import com.shippingapp.shipping.exception.CityServiceException;
 import com.shippingapp.shipping.exception.OriginAndDestinationAreEqualsException;
 import com.shippingapp.shipping.models.City;
 import com.shippingapp.shipping.models.CityDTO;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Comparator;
@@ -46,10 +44,9 @@ public class CityServiceImpl implements CityService {
     }
 
     public List<String> getCityNames() {
-        Object messageResponse = request.sendRequestAndReceiveResponse(MESSAGE_CITY);
-        verifyResponse(messageResponse, MESSAGE_CITY);
+        String messageResponse = request.sendRequestAndReceiveResponse(MESSAGE_CITY);
 
-        List<City> cities = gson.fromJson(messageResponse.toString(), CITY_REFERENCE);
+        List<City> cities = gson.fromJson(messageResponse, CITY_REFERENCE);
         return getCityNamesList(cities);
     }
 
@@ -68,19 +65,11 @@ public class CityServiceImpl implements CityService {
             String message = String.format(MESSAGE_CITY_PATH,
                     cityDTO.getOrigin(), cityDTO.getDestination());
 
-            Object messageResponse = request.sendRequestAndReceiveResponse(message);
-            verifyResponse(messageResponse, MESSAGE_CITY_PATH);
-            List<CityPath> cityPaths = gson.fromJson(messageResponse.toString(), CITY_PATH_REFERENCE);
+            String messageResponse = request.sendRequestAndReceiveResponse(message);
+            List<CityPath> cityPaths = gson.fromJson(messageResponse, CITY_PATH_REFERENCE);
 
             return dfsFindPaths.getFirstPathFromOriginToDestination(cityPaths, cityDTO.getOrigin(), cityDTO.getDestination());
         }
         throw new OriginAndDestinationAreEqualsException("Cities must be different");
-    }
-
-    private void verifyResponse(Object messageResponse, String type) {
-        if (Objects.isNull(messageResponse) || messageResponse.toString().isEmpty()) {
-            logger.error("Response of {} is empty or null", type);
-            throw new CityServiceException("response is empty or null");
-        }
     }
 }

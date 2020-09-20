@@ -1,10 +1,9 @@
 package com.shippingapp.shipping.services.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.gson.*;
+import com.google.gson.Gson;
 import com.shippingapp.shipping.component.Request;
 import com.shippingapp.shipping.config.ConnectionProperties;
-import com.shippingapp.shipping.exception.PackageServiceException;
 import com.shippingapp.shipping.exception.PackageTypeIsNullOrEmptyException;
 import com.shippingapp.shipping.models.PackageSize;
 import com.shippingapp.shipping.models.PackageType;
@@ -41,11 +40,9 @@ public class PackageServiceImpl implements PackageService {
     }
 
     public List<String> getDescriptionsForPackageTypes() {
-        Object messageResponse = request.sendRequestAndReceiveResponse(MESSAGE_TYPE);
-
-        verifyResponse(messageResponse, MESSAGE_TYPE);
+        String messageResponse = request.sendRequestAndReceiveResponse(MESSAGE_TYPE);
         logger.info("response package type {}", messageResponse);
-        List<PackageType> packageTypes = gson.fromJson(messageResponse.toString(), PACKAGE_TYPE_REFERENCE);
+        List<PackageType> packageTypes = gson.fromJson(messageResponse, PACKAGE_TYPE_REFERENCE);
         return getDescriptionTypesList(packageTypes);
     }
 
@@ -64,11 +61,10 @@ public class PackageServiceImpl implements PackageService {
             throw new PackageTypeIsNullOrEmptyException("Error to get package sizes");
         }
         String message = String.format(MESSAGE_SIZE, packageType);
-        Object messageResponse = request.sendRequestAndReceiveResponse(message);
+        String messageResponse = request.sendRequestAndReceiveResponse(message);
 
-        verifyResponse(messageResponse, MESSAGE_SIZE);
         logger.info("response package size {}", messageResponse);
-        List<PackageSize> packageSizes = gson.fromJson(messageResponse.toString(), PACKAGE_SIZE_REFERENCE);
+        List<PackageSize> packageSizes = gson.fromJson(messageResponse, PACKAGE_SIZE_REFERENCE);
         return getDescriptionSizesList(packageSizes);
     }
 
@@ -79,12 +75,5 @@ public class PackageServiceImpl implements PackageService {
                 .filter(ps -> ps.getId() != 0 && !ps.getDescription().isEmpty())
                 .map(PackageSize::getDescription)
                 .collect(Collectors.toList());
-    }
-
-    private void verifyResponse(Object messageResponse, String type) {
-        if (Objects.isNull(messageResponse) || messageResponse.toString().isEmpty()) {
-            logger.error("Response of {} is empty or null", type);
-            throw new PackageServiceException("response is empty or null");
-        }
     }
 }

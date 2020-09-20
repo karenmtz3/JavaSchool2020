@@ -1,7 +1,7 @@
 package com.shippingapp.shipping.services.impl;
 
 import com.shippingapp.shipping.config.ConnectionProperties;
-import com.shippingapp.shipping.exception.TransportServiceException;
+import com.shippingapp.shipping.exception.ResponseIsNullOrEmptyException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,22 +54,22 @@ public class TransportServiceImplTest {
     }
 
     @Test
-    public void getDescriptionForTransportTypesWithMessageReceivedEmpty_thenThrowTransportServiceException() {
+    public void getDescriptionForTransportTypesWithMessageReceivedEmpty_thenThrowResponseIsNullOrEmptyException() {
         String messageReceived = "";
 
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageType)).thenReturn(messageReceived);
 
-        assertThatExceptionOfType(TransportServiceException.class).isThrownBy(
+        assertThatExceptionOfType(ResponseIsNullOrEmptyException.class).isThrownBy(
                 () -> transportService.getDescriptionForTransportTypes());
     }
 
     @Test
-    public void getDescriptionsForTransportTypesWithMessageReceivedNull_thenThrowTransportServiceException() {
+    public void getDescriptionsForTransportTypesWithMessageReceivedNull_thenThrowResponseIsNullOrEmptyException() {
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageType)).thenReturn(null);
 
-        assertThatExceptionOfType(TransportServiceException.class).isThrownBy(
+        assertThatExceptionOfType(ResponseIsNullOrEmptyException.class).isThrownBy(
                 () -> transportService.getDescriptionForTransportTypes());
     }
 
@@ -104,7 +104,7 @@ public class TransportServiceImplTest {
     }
 
     @Test
-    public void getDescriptionsForTransportVelocities_SuccessException() {
+    public void getDescriptionsForTransportVelocities_SuccessExpected() {
         String messageReceived = " [{\"id\":4,\"description\":\"Regular\", priceFactor\":0}," +
                 "{\"id\":5,\"description\":\"Express\",\"priceFactor\":15}," +
                 "{\"id\":6,\"description\":\"Following day\",\"priceFactor\":20}]";
@@ -120,22 +120,22 @@ public class TransportServiceImplTest {
     }
 
     @Test
-    public void getDescriptionsForTransportVelocitiesWithMessageReceivedEmpty_thenThrowTransportServiceException() {
+    public void getDescriptionsForTransportVelocitiesWithMessageReceivedEmpty_thenThrowResponseIsNullOrEmptyException() {
         String messageReceived = "";
 
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageVelocity)).thenReturn(messageReceived);
 
-        assertThatExceptionOfType(TransportServiceException.class).isThrownBy(
+        assertThatExceptionOfType(ResponseIsNullOrEmptyException.class).isThrownBy(
                 () -> transportService.getDescriptionForTransportVelocity());
     }
 
     @Test
-    public void getDescriptionsForTransportVelocitiesWithMessageReceivedNull_thenThrowTransportServiceException() {
+    public void getDescriptionsForTransportVelocitiesWithMessageReceivedNull_thenThrowResponseIsNullOrEmptyException() {
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageVelocity)).thenReturn(null);
 
-        assertThatExceptionOfType(TransportServiceException.class).isThrownBy(
+        assertThatExceptionOfType(ResponseIsNullOrEmptyException.class).isThrownBy(
                 () -> transportService.getDescriptionForTransportVelocity());
     }
 

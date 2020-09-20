@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
 import com.shippingapp.shipping.component.Request;
 import com.shippingapp.shipping.config.ConnectionProperties;
-import com.shippingapp.shipping.exception.TransportServiceException;
 import com.shippingapp.shipping.models.TransportType;
 import com.shippingapp.shipping.models.TransportVelocity;
 import com.shippingapp.shipping.services.TransportService;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.lang.reflect.Type;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,11 +37,10 @@ public class TransportServiceImpl implements TransportService {
     }
 
     public List<String> getDescriptionForTransportTypes() {
-        Object messageResponse = request.sendRequestAndReceiveResponse(MESSAGE_TRANSPORT_TYPE);
+        String messageResponse = request.sendRequestAndReceiveResponse(MESSAGE_TRANSPORT_TYPE);
 
-        verifyResponse(messageResponse, MESSAGE_TRANSPORT_TYPE);
         logger.info("response transport type {}", messageResponse);
-        List<TransportType> transportTypes = gson.fromJson(messageResponse.toString(), TRANSPORT_TYPE_REFERENCE);
+        List<TransportType> transportTypes = gson.fromJson(messageResponse, TRANSPORT_TYPE_REFERENCE);
         return getDescriptionTypesList(transportTypes);
     }
 
@@ -58,11 +55,9 @@ public class TransportServiceImpl implements TransportService {
 
     public List<String> getDescriptionForTransportVelocity() {
         String type = "transportVelocity";
-        Object messageResponse = request.sendRequestAndReceiveResponse(MESSAGE_TRANSPORT_VELOCITY);
-
-        verifyResponse(messageResponse, MESSAGE_TRANSPORT_VELOCITY);
+        String messageResponse = request.sendRequestAndReceiveResponse(MESSAGE_TRANSPORT_VELOCITY);
         logger.info("response transport velocity {}", messageResponse);
-        List<TransportVelocity> transportVelocities = gson.fromJson(messageResponse.toString(), VELOCITY_TYPE_REFERENCE);
+        List<TransportVelocity> transportVelocities = gson.fromJson(messageResponse, VELOCITY_TYPE_REFERENCE);
         return getDescriptionVelocitiesList(transportVelocities);
     }
 
@@ -73,12 +68,5 @@ public class TransportServiceImpl implements TransportService {
                 .filter(tv -> tv.getId() != 0 && !tv.getDescription().isEmpty())
                 .map(TransportVelocity::getDescription)
                 .collect(Collectors.toList());
-    }
-
-    private void verifyResponse(Object messageResponse, String type) {
-        if (Objects.isNull(messageResponse) || messageResponse.toString().isEmpty()) {
-            logger.error("Response of {} is empty or null", type);
-            throw new TransportServiceException("response is empty or null");
-        }
     }
 }

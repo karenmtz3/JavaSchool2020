@@ -1,6 +1,7 @@
 package com.shippingapp.shipping.services.impl;
 
 import com.google.gson.Gson;
+import com.shippingapp.shipping.component.BcuFindPath;
 import com.shippingapp.shipping.component.DfsFindPaths;
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.CityServiceException;
@@ -40,12 +41,12 @@ public class CityServiceImplTest {
     public void setUp() {
         this.rabbitTemplate = Mockito.mock(AmqpTemplate.class);
         this.connectionProperties = Mockito.mock(ConnectionProperties.class);
-        DfsFindPaths dfsFindPaths = new DfsFindPaths();
+        BcuFindPath bcuFindPath = new BcuFindPath();
 
         messageCity = "{\"type\":\"city\"}";
         messagePath = "{\"type\":\"routesList\",\"origin\":\"Chihuahua\",\"destination\":\"Ciudad de Mexico\"}";
         cityDTO = gson.fromJson(VALID_CITIES, CityDTO.class);
-        cityService = new CityServiceImpl(rabbitTemplate, connectionProperties, dfsFindPaths);
+        cityService = new CityServiceImpl(rabbitTemplate, connectionProperties, bcuFindPath);
     }
 
     @Test
@@ -123,26 +124,124 @@ public class CityServiceImplTest {
     }
 
     @Test
-    public void getFirstPath_SuccessExpected() {
-        String messageReceived = "[{\"from\":\"Guadalajara\",\"to\":\"Villahermosa\",\"distance\":\"58\"}," +
+    public void getOptimalPathWithoutIntermediateCities_SuccessExpected() {
+        String messageReceived = "[{\"from\":\"Chihuahua\",\"to\":\"Torreon\",\"distance\":\"50\"}," +
+                "{\"from\":\"Torreon\",\"to\":\"Ciudad de Mexico\",\"distance\":\"63\"}," +
+                "{\"from\":\"Ciudad del Carmen\",\"to\":\"Ciudad de Mexico\",\"distance\":\"50\"}," +
+                "{\"from\":\"Cancun\",\"to\":\"Toluca\",\"distance\":\"28\"}," +
+                "{\"from\":\"Torreon\",\"to\":\"Xalapa\",\"distance\":\"26\"}," +
+                "{\"from\":\"Chihuahua\",\"to\":\"Cancun\",\"distance\":\"70\"}," +
+                "{\"from\":\"Durango\",\"to\":\"Oaxaca\",\"distance\":\"78\"}," +
+                "{\"from\":\"Chihuahua\",\"to\":\"Durango\",\"distance\":\"43\"}," +
+                "{\"from\":\"Tlaxcala\",\"to\":\"Ciudad de Mexico\",\"distance\":\"23\"}," +
+                "{\"from\":\"Tlaxcala\",\"to\":\"Zacatecas\",\"distance\":\"79\"}," +
+                "{\"from\":\"Merida\",\"to\":\"Ciudad de Mexico\",\"distance\":\"26\"}," +
+                "{\"from\":\"Toluca\",\"to\":\"Merida\",\"distance\":\"10\"}," +
+                "{\"from\":\"Durango\",\"to\":\"Ciudad del Carmen\",\"distance\":\"15\"}," +
+                "{\"from\":\"Zacatecas\",\"to\":\"Ciudad de Mexico\",\"distance\":\"21\"}," +
+                "{\"from\":\"Oaxaca\",\"to\":\"Tlaxcala\",\"distance\":\"56\"}," +
+                "{\"from\":\"Xapala\",\"to\":\"Toluca\",\"distance\":\"30\"}," +
+                "{\"from\":\"Chihuahua\",\"to\":\"Ciudad de Mexico\",\"distance\":\"100\"}," +
+                "{\"from\":\"Toluca\",\"to\":\"Tlaxcala\",\"distance\":\"97\"}]";
+
+        String pathExpected = "Chihuahua -> Ciudad de Mexico";
+
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
+
+        String response = cityService.getOptimalPath(cityDTO);
+
+        assertThat(response).isEqualTo(pathExpected);
+    }
+
+    @Test
+    public void getOptimalPathWithSingleIntermediateCity_SuccessExpected() {
+        String messageReceived = "[{\"from\":\"Chihuahua\",\"to\":\"Torreon\",\"distance\":\"50\"}," +
+                "{\"from\":\"Torreon\",\"to\":\"Ciudad de Mexico\",\"distance\":\"63\"}," +
+                "{\"from\":\"Cancun\",\"to\":\"Toluca\",\"distance\":\"28\"}," +
+                "{\"from\":\"Torreon\",\"to\":\"Xalapa\",\"distance\":\"26\"}," +
+                "{\"from\":\"Chihuahua\",\"to\":\"Cancun\",\"distance\":\"70\"}," +
+                "{\"from\":\"Durango\",\"to\":\"Oaxaca\",\"distance\":\"78\"}," +
+                "{\"from\":\"Chihuahua\",\"to\":\"Durango\",\"distance\":\"43\"}," +
+                "{\"from\":\"Tlaxcala\",\"to\":\"Ciudad de Mexico\",\"distance\":\"23\"}," +
+                "{\"from\":\"Tlaxcala\",\"to\":\"Zacatecas\",\"distance\":\"79\"}," +
+                "{\"from\":\"Merida\",\"to\":\"Ciudad de Mexico\",\"distance\":\"26\"}," +
+                "{\"from\":\"Toluca\",\"to\":\"Merida\",\"distance\":\"10\"}," +
+                "{\"from\":\"Durango\",\"to\":\"Ciudad del Carmen\",\"distance\":\"15\"}," +
+                "{\"from\":\"Zacatecas\",\"to\":\"Ciudad de Mexico\",\"distance\":\"21\"}," +
+                "{\"from\":\"Oaxaca\",\"to\":\"Tlaxcala\",\"distance\":\"56\"}," +
+                "{\"from\":\"Xapala\",\"to\":\"Toluca\",\"distance\":\"30\"}," +
+                "{\"from\":\"Chihuahua\",\"to\":\"Ciudad de Mexico\",\"distance\":\"120\"}," +
+                "{\"from\":\"Toluca\",\"to\":\"Tlaxcala\",\"distance\":\"97\"}]";
+
+        String pathExpected = "Chihuahua -> Torreon -> Ciudad de Mexico";
+
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
+
+        String response = cityService.getOptimalPath(cityDTO);
+
+        assertThat(response).isEqualTo(pathExpected);
+    }
+
+    @Test
+    public void getOptimalPathWithTwoIntermediateCities_SuccessExpected() {
+        String messageReceived = "[{\"from\":\"Chihuahua\",\"to\":\"Torreon\",\"distance\":\"50\"}," +
+                "{\"from\":\"Torreon\",\"to\":\"Ciudad de Mexico\",\"distance\":\"63\"}," +
                 "{\"from\":\"Ciudad del Carmen\",\"to\":\"Ciudad de Mexico\",\"distance\":\"30\"}," +
                 "{\"from\":\"Cancun\",\"to\":\"Toluca\",\"distance\":\"28\"}," +
                 "{\"from\":\"Torreon\",\"to\":\"Xalapa\",\"distance\":\"26\"}," +
                 "{\"from\":\"Chihuahua\",\"to\":\"Cancun\",\"distance\":\"70\"}," +
                 "{\"from\":\"Durango\",\"to\":\"Oaxaca\",\"distance\":\"78\"}," +
+                "{\"from\":\"Chihuahua\",\"to\":\"Durango\",\"distance\":\"23\"}," +
                 "{\"from\":\"Tlaxcala\",\"to\":\"Ciudad de Mexico\",\"distance\":\"23\"}," +
                 "{\"from\":\"Tlaxcala\",\"to\":\"Zacatecas\",\"distance\":\"79\"}," +
                 "{\"from\":\"Merida\",\"to\":\"Ciudad de Mexico\",\"distance\":\"26\"}," +
-                "{\"from\":\"San Luis Potosi\",\"to\":\"Ciudad de Mexico\",\"distance\":\"94\"}," +
-                "{\"from\":\"Acapulco\",\"to\":\"Ciudad de Mexico\",\"distance\":\"72\"}," +
+                "{\"from\":\"Toluca\",\"to\":\"Merida\",\"distance\":\"10\"}," +
+                "{\"from\":\"Durango\",\"to\":\"Ciudad del Carmen\",\"distance\":\"15\"}," +
+                "{\"from\":\"Zacatecas\",\"to\":\"Ciudad de Mexico\",\"distance\":\"21\"}," +
+                "{\"from\":\"Oaxaca\",\"to\":\"Tlaxcala\",\"distance\":\"56\"}," +
+                "{\"from\":\"Xapala\",\"to\":\"Toluca\",\"distance\":\"30\"}," +
+                "{\"from\":\"Chihuahua\",\"to\":\"Ciudad de Mexico\",\"distance\":\"100\"}," +
                 "{\"from\":\"Toluca\",\"to\":\"Tlaxcala\",\"distance\":\"97\"}]";
 
-        String pathExpected = "Chihuahua -> Cancun -> Toluca -> Tlaxcala -> Ciudad de Mexico";
+        String pathExpected = "Chihuahua -> Durango -> Ciudad del Carmen -> Ciudad de Mexico";
 
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
 
-        String response = cityService.getFirstPath(cityDTO);
+        String response = cityService.getOptimalPath(cityDTO);
+
+        assertThat(response).isEqualTo(pathExpected);
+    }
+
+    @Test
+    public void getOptimalPathWithThreeIntermediateCities_SuccessExpected() {
+        String messageReceived = "[{\"from\":\"Chihuahua\",\"to\":\"Torreon\",\"distance\":\"89\"}," +
+                "{\"from\":\"Torreon\",\"to\":\"Ciudad de Mexico\",\"distance\":\"63\"}," +
+                "{\"from\":\"Ciudad del Carmen\",\"to\":\"Ciudad de Mexico\",\"distance\":\"50\"}," +
+                "{\"from\":\"Cancun\",\"to\":\"Toluca\",\"distance\":\"28\"}," +
+                "{\"from\":\"Torreon\",\"to\":\"Xalapa\",\"distance\":\"26\"}," +
+                "{\"from\":\"Chihuahua\",\"to\":\"Cancun\",\"distance\":\"70\"}," +
+                "{\"from\":\"Durango\",\"to\":\"Oaxaca\",\"distance\":\"78\"}," +
+                "{\"from\":\"Chihuahua\",\"to\":\"Durango\",\"distance\":\"83\"}," +
+                "{\"from\":\"Tlaxcala\",\"to\":\"Ciudad de Mexico\",\"distance\":\"23\"}," +
+                "{\"from\":\"Tlaxcala\",\"to\":\"Zacatecas\",\"distance\":\"79\"}," +
+                "{\"from\":\"Merida\",\"to\":\"Ciudad de Mexico\",\"distance\":\"26\"}," +
+                "{\"from\":\"Toluca\",\"to\":\"Merida\",\"distance\":\"10\"}," +
+                "{\"from\":\"Durango\",\"to\":\"Ciudad del Carmen\",\"distance\":\"15\"}," +
+                "{\"from\":\"Zacatecas\",\"to\":\"Ciudad de Mexico\",\"distance\":\"21\"}," +
+                "{\"from\":\"Oaxaca\",\"to\":\"Tlaxcala\",\"distance\":\"56\"}," +
+                "{\"from\":\"Xapala\",\"to\":\"Toluca\",\"distance\":\"30\"}," +
+                "{\"from\":\"Chihuahua\",\"to\":\"Ciudad de Mexico\",\"distance\":\"200\"}," +
+                "{\"from\":\"Toluca\",\"to\":\"Tlaxcala\",\"distance\":\"97\"}]";
+
+        String pathExpected = "Chihuahua -> Cancun -> Toluca -> Merida -> Ciudad de Mexico";
+
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
+
+        String response = cityService.getOptimalPath(cityDTO);
 
         assertThat(response).isEqualTo(pathExpected);
     }
@@ -155,7 +254,7 @@ public class CityServiceImplTest {
                 connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
 
         assertThatExceptionOfType(CityServiceException.class).isThrownBy(
-                () -> cityService.getFirstPath(cityDTO));
+                () -> cityService.getOptimalPath(cityDTO));
     }
 
     @Test
@@ -164,6 +263,6 @@ public class CityServiceImplTest {
                 connectionProperties.getRoutingKey(), messagePath)).thenReturn(null);
 
         assertThatExceptionOfType(CityServiceException.class).isThrownBy(
-                () -> cityService.getFirstPath(cityDTO));
+                () -> cityService.getOptimalPath(cityDTO));
     }
 }

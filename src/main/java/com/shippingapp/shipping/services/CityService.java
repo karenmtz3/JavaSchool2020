@@ -7,5 +7,5 @@ import java.util.List;
 public interface CityService {
     List<String> getCityNames();
 
-    String getFirstPath(CityDTO cityDTO);
+    String getOptimalPath(CityDTO cityDTO);
 }

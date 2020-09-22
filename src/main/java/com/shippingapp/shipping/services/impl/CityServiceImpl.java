@@ -2,7 +2,7 @@ package com.shippingapp.shipping.services.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
-import com.shippingapp.shipping.component.DfsFindPaths;
+import com.shippingapp.shipping.component.BcuFindPath;
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.CentralServerException;
 import com.shippingapp.shipping.exception.CityServiceException;
@@ -39,13 +39,14 @@ public class CityServiceImpl implements CityService {
 
     private final AmqpTemplate rabbitTemplate;
     private final ConnectionProperties connectionProperties;
-    private final DfsFindPaths dfsFindPaths;
+    private final BcuFindPath bcuFindPath;
     private static final Gson gson = new Gson();
 
-    public CityServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties, DfsFindPaths dfsFindPaths) {
+    public CityServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties,
+                           BcuFindPath bcuFindPath) {
         this.rabbitTemplate = rabbitTemplate;
         this.connectionProperties = connectionProperties;
-        this.dfsFindPaths = dfsFindPaths;
+        this.bcuFindPath = bcuFindPath;
     }
 
     public List<String> getCityNames() {
@@ -75,7 +76,7 @@ public class CityServiceImpl implements CityService {
                 .collect(Collectors.toList());
     }
 
-    public String getFirstPath(CityDTO cityDTO) {
+    public String getOptimalPath(CityDTO cityDTO) {
         if (!cityDTO.getOrigin().equals(cityDTO.getDestination())) {
             String message = String.format(MESSAGE_CITY_PATH,
                     cityDTO.getOrigin(), cityDTO.getDestination());
@@ -94,7 +95,7 @@ public class CityServiceImpl implements CityService {
             }
             List<CityPath> cityPaths = gson.fromJson(messageResponse.toString(), CITY_PATH_REFERENCE);
 
-            return dfsFindPaths.getFirstPathFromOriginToDestination(cityPaths, cityDTO.getOrigin(), cityDTO.getDestination());
+            return bcuFindPath.findOptimalPath(cityPaths, cityDTO.getOrigin(), cityDTO.getDestination());
         }
         throw new OriginAndDestinationAreEqualsException("Cities must be different");
     }

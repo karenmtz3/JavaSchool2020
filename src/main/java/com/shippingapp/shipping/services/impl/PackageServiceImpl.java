@@ -2,15 +2,13 @@ package com.shippingapp.shipping.services.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
-import com.shippingapp.shipping.component.Request;
-import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.PackageTypeIsNullOrEmptyException;
 import com.shippingapp.shipping.models.PackageSize;
 import com.shippingapp.shipping.models.PackageType;
+import com.shippingapp.shipping.services.CentralServerConnectionService;
 import com.shippingapp.shipping.services.PackageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Type;
@@ -33,14 +31,14 @@ public class PackageServiceImpl implements PackageService {
     private static final Type PACKAGE_SIZE_REFERENCE = new TypeReference<List<PackageSize>>() {
     }.getType();
 
-    private final Request request;
+    private final CentralServerConnectionService centralServerConnectionService;
 
-    public PackageServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties) {
-        request = new Request(connectionProperties, rabbitTemplate);
+    public PackageServiceImpl(CentralServerConnectionService centralServerConnectionService) {
+        this.centralServerConnectionService = centralServerConnectionService;
     }
 
     public List<String> getDescriptionsForPackageTypes() {
-        String messageResponse = request.sendRequestAndReceiveResponse(MESSAGE_TYPE);
+        String messageResponse = centralServerConnectionService.sendRequestAndReceiveResponse(MESSAGE_TYPE);
         logger.info("response package type {}", messageResponse);
         List<PackageType> packageTypes = gson.fromJson(messageResponse, PACKAGE_TYPE_REFERENCE);
         return getDescriptionTypesList(packageTypes);
@@ -61,7 +59,7 @@ public class PackageServiceImpl implements PackageService {
             throw new PackageTypeIsNullOrEmptyException("Error to get package sizes");
         }
         String message = String.format(MESSAGE_SIZE, packageType);
-        String messageResponse = request.sendRequestAndReceiveResponse(message);
+        String messageResponse = centralServerConnectionService.sendRequestAndReceiveResponse(message);
 
         logger.info("response package size {}", messageResponse);
         List<PackageSize> packageSizes = gson.fromJson(messageResponse, PACKAGE_SIZE_REFERENCE);

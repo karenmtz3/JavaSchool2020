@@ -2,14 +2,12 @@ package com.shippingapp.shipping.services.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
-import com.shippingapp.shipping.component.Request;
-import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.models.TransportType;
 import com.shippingapp.shipping.models.TransportVelocity;
+import com.shippingapp.shipping.services.CentralServerConnectionService;
 import com.shippingapp.shipping.services.TransportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Type;
@@ -29,15 +27,15 @@ public class TransportServiceImpl implements TransportService {
     private static final Type VELOCITY_TYPE_REFERENCE = new TypeReference<List<TransportVelocity>>() {
     }.getType();
 
-    private final Request request;
+    private final CentralServerConnectionService centralServerConnectionService;
     private static final Gson gson = new Gson();
 
-    public TransportServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties) {
-        request = new Request(connectionProperties, rabbitTemplate);
+    public TransportServiceImpl(CentralServerConnectionService centralServerConnectionService) {
+        this.centralServerConnectionService = centralServerConnectionService;
     }
 
     public List<String> getDescriptionForTransportTypes() {
-        String messageResponse = request.sendRequestAndReceiveResponse(MESSAGE_TRANSPORT_TYPE);
+        String messageResponse = centralServerConnectionService.sendRequestAndReceiveResponse(MESSAGE_TRANSPORT_TYPE);
 
         logger.info("response transport type {}", messageResponse);
         List<TransportType> transportTypes = gson.fromJson(messageResponse, TRANSPORT_TYPE_REFERENCE);
@@ -55,7 +53,7 @@ public class TransportServiceImpl implements TransportService {
 
     public List<String> getDescriptionForTransportVelocity() {
         String type = "transportVelocity";
-        String messageResponse = request.sendRequestAndReceiveResponse(MESSAGE_TRANSPORT_VELOCITY);
+        String messageResponse = centralServerConnectionService.sendRequestAndReceiveResponse(MESSAGE_TRANSPORT_VELOCITY);
         logger.info("response transport velocity {}", messageResponse);
         List<TransportVelocity> transportVelocities = gson.fromJson(messageResponse, VELOCITY_TYPE_REFERENCE);
         return getDescriptionVelocitiesList(transportVelocities);

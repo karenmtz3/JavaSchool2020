@@ -5,6 +5,7 @@ import com.shippingapp.shipping.component.DfsFindPaths;
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.ResponseIsNullOrEmptyException;
 import com.shippingapp.shipping.models.CityDTO;
+import com.shippingapp.shipping.services.CentralServerConnectionService;
 import com.shippingapp.shipping.services.CityService;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,12 +41,13 @@ public class CityServiceImplTest {
     public void setUp() {
         this.rabbitTemplate = Mockito.mock(AmqpTemplate.class);
         this.connectionProperties = Mockito.mock(ConnectionProperties.class);
+        CentralServerConnectionService centralServerConnectionService = new CentralServerConnectionServiceImpl(connectionProperties, rabbitTemplate);
         DfsFindPaths dfsFindPaths = new DfsFindPaths();
 
         messageCity = "{\"type\":\"city\"}";
         messagePath = "{\"type\":\"routesList\",\"origin\":\"Chihuahua\",\"destination\":\"Ciudad de Mexico\"}";
         cityDTO = gson.fromJson(VALID_CITIES, CityDTO.class);
-        cityService = new CityServiceImpl(rabbitTemplate, connectionProperties, dfsFindPaths);
+        cityService = new CityServiceImpl(centralServerConnectionService, dfsFindPaths);
     }
 
     @Test

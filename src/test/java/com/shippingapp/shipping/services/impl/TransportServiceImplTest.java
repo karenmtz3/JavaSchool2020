@@ -2,6 +2,7 @@ package com.shippingapp.shipping.services.impl;
 
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.ResponseIsNullOrEmptyException;
+import com.shippingapp.shipping.services.CentralServerConnectionService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,11 +32,12 @@ public class TransportServiceImplTest {
     public void setUp() {
         this.rabbitTemplate = Mockito.mock(AmqpTemplate.class);
         this.connectionProperties = Mockito.mock(ConnectionProperties.class);
+        CentralServerConnectionService centralServerConnectionService = new CentralServerConnectionServiceImpl(connectionProperties, rabbitTemplate);
 
         messageType = "{\"type\":\"transportType\"}";
         messageVelocity = "{\"type\":\"transportVelocity\"}";
 
-        transportService = new TransportServiceImpl(rabbitTemplate, connectionProperties);
+        transportService = new TransportServiceImpl(centralServerConnectionService);
     }
 
     @Test

@@ -3,16 +3,14 @@ package com.shippingapp.shipping.services.impl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
 import com.shippingapp.shipping.component.DfsFindPaths;
-import com.shippingapp.shipping.component.Request;
-import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.OriginAndDestinationAreEqualsException;
 import com.shippingapp.shipping.models.City;
 import com.shippingapp.shipping.models.CityDTO;
 import com.shippingapp.shipping.models.CityPath;
+import com.shippingapp.shipping.services.CentralServerConnectionService;
 import com.shippingapp.shipping.services.CityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Type;
@@ -34,17 +32,17 @@ public class CityServiceImpl implements CityService {
     private static final Type CITY_PATH_REFERENCE = new TypeReference<List<CityPath>>() {
     }.getType();
 
-    private final Request request;
+    private final CentralServerConnectionService centralServerConnectionService;
     private final DfsFindPaths dfsFindPaths;
     private static final Gson gson = new Gson();
 
-    public CityServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties, DfsFindPaths dfsFindPaths) {
-        request = new Request(connectionProperties, rabbitTemplate);
+    public CityServiceImpl(CentralServerConnectionService centralServerConnectionService, DfsFindPaths dfsFindPaths) {
+        this.centralServerConnectionService = centralServerConnectionService;
         this.dfsFindPaths = dfsFindPaths;
     }
 
     public List<String> getCityNames() {
-        String messageResponse = request.sendRequestAndReceiveResponse(MESSAGE_CITY);
+        String messageResponse = centralServerConnectionService.sendRequestAndReceiveResponse(MESSAGE_CITY);
 
         List<City> cities = gson.fromJson(messageResponse, CITY_REFERENCE);
         return getCityNamesList(cities);
@@ -65,7 +63,7 @@ public class CityServiceImpl implements CityService {
             String message = String.format(MESSAGE_CITY_PATH,
                     cityDTO.getOrigin(), cityDTO.getDestination());
 
-            String messageResponse = request.sendRequestAndReceiveResponse(message);
+            String messageResponse = centralServerConnectionService.sendRequestAndReceiveResponse(message);
             List<CityPath> cityPaths = gson.fromJson(messageResponse, CITY_PATH_REFERENCE);
 
             return dfsFindPaths.getFirstPathFromOriginToDestination(cityPaths, cityDTO.getOrigin(), cityDTO.getDestination());

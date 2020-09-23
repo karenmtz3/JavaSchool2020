@@ -1,12 +1,12 @@
 package com.shippingapp.shipping.services.impl;
 
 import com.google.gson.Gson;
-import com.shippingapp.shipping.component.BcuFindPath;
-import com.shippingapp.shipping.component.DfsFindPaths;
+import com.shippingapp.shipping.component.OptimalPath;
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.CityServiceException;
 import com.shippingapp.shipping.models.CityDTO;
 import com.shippingapp.shipping.services.CityService;
+import com.shippingapp.shipping.util.MessageLoader;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +14,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.amqp.core.AmqpTemplate;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,12 +42,12 @@ public class CityServiceImplTest {
     public void setUp() {
         this.rabbitTemplate = Mockito.mock(AmqpTemplate.class);
         this.connectionProperties = Mockito.mock(ConnectionProperties.class);
-        BcuFindPath bcuFindPath = new BcuFindPath();
+        OptimalPath optimalPath = new OptimalPath();
 
         messageCity = "{\"type\":\"city\"}";
         messagePath = "{\"type\":\"routesList\",\"origin\":\"Chihuahua\",\"destination\":\"Ciudad de Mexico\"}";
         cityDTO = gson.fromJson(VALID_CITIES, CityDTO.class);
-        cityService = new CityServiceImpl(rabbitTemplate, connectionProperties, bcuFindPath);
+        cityService = new CityServiceImpl(rabbitTemplate, connectionProperties, optimalPath);
     }
 
     @Test
@@ -124,25 +125,8 @@ public class CityServiceImplTest {
     }
 
     @Test
-    public void getOptimalPathWithoutIntermediateCities_SuccessExpected() {
-        String messageReceived = "[{\"from\":\"Chihuahua\",\"to\":\"Torreon\",\"distance\":\"50\"}," +
-                "{\"from\":\"Torreon\",\"to\":\"Ciudad de Mexico\",\"distance\":\"63\"}," +
-                "{\"from\":\"Ciudad del Carmen\",\"to\":\"Ciudad de Mexico\",\"distance\":\"50\"}," +
-                "{\"from\":\"Cancun\",\"to\":\"Toluca\",\"distance\":\"28\"}," +
-                "{\"from\":\"Torreon\",\"to\":\"Xalapa\",\"distance\":\"26\"}," +
-                "{\"from\":\"Chihuahua\",\"to\":\"Cancun\",\"distance\":\"70\"}," +
-                "{\"from\":\"Durango\",\"to\":\"Oaxaca\",\"distance\":\"78\"}," +
-                "{\"from\":\"Chihuahua\",\"to\":\"Durango\",\"distance\":\"43\"}," +
-                "{\"from\":\"Tlaxcala\",\"to\":\"Ciudad de Mexico\",\"distance\":\"23\"}," +
-                "{\"from\":\"Tlaxcala\",\"to\":\"Zacatecas\",\"distance\":\"79\"}," +
-                "{\"from\":\"Merida\",\"to\":\"Ciudad de Mexico\",\"distance\":\"26\"}," +
-                "{\"from\":\"Toluca\",\"to\":\"Merida\",\"distance\":\"10\"}," +
-                "{\"from\":\"Durango\",\"to\":\"Ciudad del Carmen\",\"distance\":\"15\"}," +
-                "{\"from\":\"Zacatecas\",\"to\":\"Ciudad de Mexico\",\"distance\":\"21\"}," +
-                "{\"from\":\"Oaxaca\",\"to\":\"Tlaxcala\",\"distance\":\"56\"}," +
-                "{\"from\":\"Xapala\",\"to\":\"Toluca\",\"distance\":\"30\"}," +
-                "{\"from\":\"Chihuahua\",\"to\":\"Ciudad de Mexico\",\"distance\":\"100\"}," +
-                "{\"from\":\"Toluca\",\"to\":\"Tlaxcala\",\"distance\":\"97\"}]";
+    public void getOptimalPathWithoutIntermediateCities_SuccessExpected() throws IOException {
+        String messageReceived = MessageLoader.loadExampleResponse("responses/city-path-without-intermediate-cities.json");
 
         String pathExpected = "Chihuahua -> Ciudad de Mexico";
 
@@ -155,24 +139,8 @@ public class CityServiceImplTest {
     }
 
     @Test
-    public void getOptimalPathWithSingleIntermediateCity_SuccessExpected() {
-        String messageReceived = "[{\"from\":\"Chihuahua\",\"to\":\"Torreon\",\"distance\":\"50\"}," +
-                "{\"from\":\"Torreon\",\"to\":\"Ciudad de Mexico\",\"distance\":\"63\"}," +
-                "{\"from\":\"Cancun\",\"to\":\"Toluca\",\"distance\":\"28\"}," +
-                "{\"from\":\"Torreon\",\"to\":\"Xalapa\",\"distance\":\"26\"}," +
-                "{\"from\":\"Chihuahua\",\"to\":\"Cancun\",\"distance\":\"70\"}," +
-                "{\"from\":\"Durango\",\"to\":\"Oaxaca\",\"distance\":\"78\"}," +
-                "{\"from\":\"Chihuahua\",\"to\":\"Durango\",\"distance\":\"43\"}," +
-                "{\"from\":\"Tlaxcala\",\"to\":\"Ciudad de Mexico\",\"distance\":\"23\"}," +
-                "{\"from\":\"Tlaxcala\",\"to\":\"Zacatecas\",\"distance\":\"79\"}," +
-                "{\"from\":\"Merida\",\"to\":\"Ciudad de Mexico\",\"distance\":\"26\"}," +
-                "{\"from\":\"Toluca\",\"to\":\"Merida\",\"distance\":\"10\"}," +
-                "{\"from\":\"Durango\",\"to\":\"Ciudad del Carmen\",\"distance\":\"15\"}," +
-                "{\"from\":\"Zacatecas\",\"to\":\"Ciudad de Mexico\",\"distance\":\"21\"}," +
-                "{\"from\":\"Oaxaca\",\"to\":\"Tlaxcala\",\"distance\":\"56\"}," +
-                "{\"from\":\"Xapala\",\"to\":\"Toluca\",\"distance\":\"30\"}," +
-                "{\"from\":\"Chihuahua\",\"to\":\"Ciudad de Mexico\",\"distance\":\"120\"}," +
-                "{\"from\":\"Toluca\",\"to\":\"Tlaxcala\",\"distance\":\"97\"}]";
+    public void getOptimalPathWithSingleIntermediateCity_SuccessExpected() throws IOException {
+        String messageReceived = MessageLoader.loadExampleResponse("responses/city-path-with-single-intermediate-city.json");
 
         String pathExpected = "Chihuahua -> Torreon -> Ciudad de Mexico";
 
@@ -185,25 +153,9 @@ public class CityServiceImplTest {
     }
 
     @Test
-    public void getOptimalPathWithTwoIntermediateCities_SuccessExpected() {
-        String messageReceived = "[{\"from\":\"Chihuahua\",\"to\":\"Torreon\",\"distance\":\"50\"}," +
-                "{\"from\":\"Torreon\",\"to\":\"Ciudad de Mexico\",\"distance\":\"63\"}," +
-                "{\"from\":\"Ciudad del Carmen\",\"to\":\"Ciudad de Mexico\",\"distance\":\"30\"}," +
-                "{\"from\":\"Cancun\",\"to\":\"Toluca\",\"distance\":\"28\"}," +
-                "{\"from\":\"Torreon\",\"to\":\"Xalapa\",\"distance\":\"26\"}," +
-                "{\"from\":\"Chihuahua\",\"to\":\"Cancun\",\"distance\":\"70\"}," +
-                "{\"from\":\"Durango\",\"to\":\"Oaxaca\",\"distance\":\"78\"}," +
-                "{\"from\":\"Chihuahua\",\"to\":\"Durango\",\"distance\":\"23\"}," +
-                "{\"from\":\"Tlaxcala\",\"to\":\"Ciudad de Mexico\",\"distance\":\"23\"}," +
-                "{\"from\":\"Tlaxcala\",\"to\":\"Zacatecas\",\"distance\":\"79\"}," +
-                "{\"from\":\"Merida\",\"to\":\"Ciudad de Mexico\",\"distance\":\"26\"}," +
-                "{\"from\":\"Toluca\",\"to\":\"Merida\",\"distance\":\"10\"}," +
-                "{\"from\":\"Durango\",\"to\":\"Ciudad del Carmen\",\"distance\":\"15\"}," +
-                "{\"from\":\"Zacatecas\",\"to\":\"Ciudad de Mexico\",\"distance\":\"21\"}," +
-                "{\"from\":\"Oaxaca\",\"to\":\"Tlaxcala\",\"distance\":\"56\"}," +
-                "{\"from\":\"Xapala\",\"to\":\"Toluca\",\"distance\":\"30\"}," +
-                "{\"from\":\"Chihuahua\",\"to\":\"Ciudad de Mexico\",\"distance\":\"100\"}," +
-                "{\"from\":\"Toluca\",\"to\":\"Tlaxcala\",\"distance\":\"97\"}]";
+    public void getOptimalPathWithTwoIntermediateCities_SuccessExpected() throws IOException {
+        String messageReceived = MessageLoader.loadExampleResponse("responses/city-path-with-two-intermediate-cities.json");
+
 
         String pathExpected = "Chihuahua -> Durango -> Ciudad del Carmen -> Ciudad de Mexico";
 
@@ -216,25 +168,8 @@ public class CityServiceImplTest {
     }
 
     @Test
-    public void getOptimalPathWithThreeIntermediateCities_SuccessExpected() {
-        String messageReceived = "[{\"from\":\"Chihuahua\",\"to\":\"Torreon\",\"distance\":\"89\"}," +
-                "{\"from\":\"Torreon\",\"to\":\"Ciudad de Mexico\",\"distance\":\"63\"}," +
-                "{\"from\":\"Ciudad del Carmen\",\"to\":\"Ciudad de Mexico\",\"distance\":\"50\"}," +
-                "{\"from\":\"Cancun\",\"to\":\"Toluca\",\"distance\":\"28\"}," +
-                "{\"from\":\"Torreon\",\"to\":\"Xalapa\",\"distance\":\"26\"}," +
-                "{\"from\":\"Chihuahua\",\"to\":\"Cancun\",\"distance\":\"70\"}," +
-                "{\"from\":\"Durango\",\"to\":\"Oaxaca\",\"distance\":\"78\"}," +
-                "{\"from\":\"Chihuahua\",\"to\":\"Durango\",\"distance\":\"83\"}," +
-                "{\"from\":\"Tlaxcala\",\"to\":\"Ciudad de Mexico\",\"distance\":\"23\"}," +
-                "{\"from\":\"Tlaxcala\",\"to\":\"Zacatecas\",\"distance\":\"79\"}," +
-                "{\"from\":\"Merida\",\"to\":\"Ciudad de Mexico\",\"distance\":\"26\"}," +
-                "{\"from\":\"Toluca\",\"to\":\"Merida\",\"distance\":\"10\"}," +
-                "{\"from\":\"Durango\",\"to\":\"Ciudad del Carmen\",\"distance\":\"15\"}," +
-                "{\"from\":\"Zacatecas\",\"to\":\"Ciudad de Mexico\",\"distance\":\"21\"}," +
-                "{\"from\":\"Oaxaca\",\"to\":\"Tlaxcala\",\"distance\":\"56\"}," +
-                "{\"from\":\"Xapala\",\"to\":\"Toluca\",\"distance\":\"30\"}," +
-                "{\"from\":\"Chihuahua\",\"to\":\"Ciudad de Mexico\",\"distance\":\"200\"}," +
-                "{\"from\":\"Toluca\",\"to\":\"Tlaxcala\",\"distance\":\"97\"}]";
+    public void getOptimalPathWithThreeIntermediateCities_SuccessExpected() throws IOException {
+        String messageReceived = MessageLoader.loadExampleResponse("responses/city-path-with-three-intermediate-cities.json");
 
         String pathExpected = "Chihuahua -> Cancun -> Toluca -> Merida -> Ciudad de Mexico";
 

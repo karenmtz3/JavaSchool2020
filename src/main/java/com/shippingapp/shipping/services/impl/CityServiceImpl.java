@@ -2,7 +2,6 @@ package com.shippingapp.shipping.services.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
-import com.shippingapp.shipping.component.OptimalPath;
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.CentralServerException;
 import com.shippingapp.shipping.exception.CityServiceException;
@@ -11,6 +10,7 @@ import com.shippingapp.shipping.models.City;
 import com.shippingapp.shipping.models.CityDTO;
 import com.shippingapp.shipping.models.CityPath;
 import com.shippingapp.shipping.services.CityService;
+import com.shippingapp.shipping.services.OptimalPathService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpException;
@@ -39,14 +39,14 @@ public class CityServiceImpl implements CityService {
 
     private final AmqpTemplate rabbitTemplate;
     private final ConnectionProperties connectionProperties;
-    private final OptimalPath optimalPath;
+    private final OptimalPathService optimalPathService;
     private static final Gson gson = new Gson();
 
     public CityServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties,
-                           OptimalPath optimalPath) {
+                           OptimalPathService optimalPathService) {
         this.rabbitTemplate = rabbitTemplate;
         this.connectionProperties = connectionProperties;
-        this.optimalPath = optimalPath;
+        this.optimalPathService = optimalPathService;
     }
 
     public List<String> getCityNames() {
@@ -95,7 +95,7 @@ public class CityServiceImpl implements CityService {
             }
             List<CityPath> cityPaths = gson.fromJson(messageResponse.toString(), CITY_PATH_REFERENCE);
 
-            return optimalPath.findOptimalPath(cityPaths, cityDTO.getOrigin(), cityDTO.getDestination());
+            return optimalPathService.getOptimalPathBetweenTwoCities(cityPaths, cityDTO.getOrigin(), cityDTO.getDestination());
         }
         throw new OriginAndDestinationAreEqualsException("Cities must be different");
     }

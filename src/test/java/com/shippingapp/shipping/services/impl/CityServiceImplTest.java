@@ -1,11 +1,11 @@
 package com.shippingapp.shipping.services.impl;
 
 import com.google.gson.Gson;
-import com.shippingapp.shipping.component.OptimalPath;
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.CityServiceException;
 import com.shippingapp.shipping.models.CityDTO;
 import com.shippingapp.shipping.services.CityService;
+import com.shippingapp.shipping.services.OptimalPathService;
 import com.shippingapp.shipping.util.MessageLoader;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,12 +42,12 @@ public class CityServiceImplTest {
     public void setUp() {
         this.rabbitTemplate = Mockito.mock(AmqpTemplate.class);
         this.connectionProperties = Mockito.mock(ConnectionProperties.class);
-        OptimalPath optimalPath = new OptimalPath();
+        OptimalPathService optimalPathService = new OptimalPathServiceImpl();
 
         messageCity = "{\"type\":\"city\"}";
         messagePath = "{\"type\":\"routesList\",\"origin\":\"Chihuahua\",\"destination\":\"Ciudad de Mexico\"}";
         cityDTO = gson.fromJson(VALID_CITIES, CityDTO.class);
-        cityService = new CityServiceImpl(rabbitTemplate, connectionProperties, optimalPath);
+        cityService = new CityServiceImpl(rabbitTemplate, connectionProperties, optimalPathService);
     }
 
     @Test

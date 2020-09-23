@@ -1,10 +1,11 @@
-package com.shippingapp.shipping.component;
+package com.shippingapp.shipping.services.impl;
 
 import com.shippingapp.shipping.models.CityPath;
 import com.shippingapp.shipping.models.Node;
 import com.shippingapp.shipping.models.Route;
 
-import org.springframework.stereotype.Component;
+import com.shippingapp.shipping.services.OptimalPathService;
+import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,15 +18,15 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
 
-@Component
-public class OptimalPath {
+@Service
+public class OptimalPathServiceImpl implements OptimalPathService {
     private String optimalPath;
 
-    public OptimalPath() {
+    public OptimalPathServiceImpl() {
         optimalPath = "";
     }
 
-    public String findOptimalPath(List<CityPath> cityPaths, String origin, String destination) {
+    public String getOptimalPathBetweenTwoCities(List<CityPath> cityPaths, String origin, String destination) {
         Map<String, Set<Node>> graph = new HashMap<>();
         generateGraph(graph, cityPaths);
 
@@ -41,7 +42,7 @@ public class OptimalPath {
                 optimalPath = String.join(" -> ", route.getPath());
                 return optimalPath;
             }
-            Set<Node> adjacentCities = adjacentCities(graph, city);
+            Set<Node> adjacentCities = getAdjacentCities(graph, city);
             for (Node nodeCity : adjacentCities) {
                 if (!route.getPath().contains(nodeCity.getCity())) {
                     List<String> pathList = new ArrayList<>(route.getPath());
@@ -63,7 +64,7 @@ public class OptimalPath {
         });
     }
 
-    private Set<Node> adjacentCities(Map<String, Set<Node>> graph, String origin) {
+    private Set<Node> getAdjacentCities(Map<String, Set<Node>> graph, String origin) {
         Set<Node> adjacent = graph.get(origin);
         if (Objects.isNull(adjacent)) {
             return new HashSet<>();

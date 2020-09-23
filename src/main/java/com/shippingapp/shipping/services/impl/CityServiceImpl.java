@@ -2,7 +2,7 @@ package com.shippingapp.shipping.services.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
-import com.shippingapp.shipping.component.BcuFindPath;
+import com.shippingapp.shipping.component.OptimalPath;
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.CentralServerException;
 import com.shippingapp.shipping.exception.CityServiceException;
@@ -39,14 +39,14 @@ public class CityServiceImpl implements CityService {
 
     private final AmqpTemplate rabbitTemplate;
     private final ConnectionProperties connectionProperties;
-    private final BcuFindPath bcuFindPath;
+    private final OptimalPath optimalPath;
     private static final Gson gson = new Gson();
 
     public CityServiceImpl(AmqpTemplate rabbitTemplate, ConnectionProperties connectionProperties,
-                           BcuFindPath bcuFindPath) {
+                           OptimalPath optimalPath) {
         this.rabbitTemplate = rabbitTemplate;
         this.connectionProperties = connectionProperties;
-        this.bcuFindPath = bcuFindPath;
+        this.optimalPath = optimalPath;
     }
 
     public List<String> getCityNames() {
@@ -95,7 +95,7 @@ public class CityServiceImpl implements CityService {
             }
             List<CityPath> cityPaths = gson.fromJson(messageResponse.toString(), CITY_PATH_REFERENCE);
 
-            return bcuFindPath.findOptimalPath(cityPaths, cityDTO.getOrigin(), cityDTO.getDestination());
+            return optimalPath.findOptimalPath(cityPaths, cityDTO.getOrigin(), cityDTO.getDestination());
         }
         throw new OriginAndDestinationAreEqualsException("Cities must be different");
     }

@@ -18,7 +18,13 @@ import java.util.HashSet;
 import java.util.Objects;
 
 @Component
-public class BcuFindPath {
+public class OptimalPath {
+    private String optimalPath;
+
+    public OptimalPath() {
+        optimalPath = "";
+    }
+
     public String findOptimalPath(List<CityPath> cityPaths, String origin, String destination) {
         Map<String, Set<Node>> graph = new HashMap<>();
         generateGraph(graph, cityPaths);
@@ -32,7 +38,8 @@ public class BcuFindPath {
             int size = route.getPath().size();
             String city = route.getPath().get(size - 1);
             if (city.equals(destination)) {
-                return String.join(" -> ", route.getPath());
+                optimalPath = String.join(" -> ", route.getPath());
+                return optimalPath;
             }
             Set<Node> adjacentCities = adjacentCities(graph, city);
             for (Node nodeCity : adjacentCities) {
@@ -45,7 +52,7 @@ public class BcuFindPath {
                 }
             }
         }
-        return "";
+        return optimalPath;
     }
 
     private void generateGraph(Map<String, Set<Node>> graph, List<CityPath> cityPaths) {

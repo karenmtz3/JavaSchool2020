@@ -1,8 +1,9 @@
 package com.shippingapp.shipping.services.impl;
 
 import com.shippingapp.shipping.config.ConnectionProperties;
-import com.shippingapp.shipping.exception.PackageServiceException;
 import com.shippingapp.shipping.exception.PackageTypeIsNullOrEmptyException;
+import com.shippingapp.shipping.exception.ResponseIsNullOrEmptyException;
+import com.shippingapp.shipping.services.CentralServerConnectionService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,11 +33,12 @@ public class PackageServiceImplTest {
     public void setUp() {
         this.rabbitTemplate = Mockito.mock(AmqpTemplate.class);
         this.connectionProperties = Mockito.mock(ConnectionProperties.class);
+        CentralServerConnectionService centralServerConnectionService = new CentralServerConnectionServiceImpl(connectionProperties, rabbitTemplate);
 
         messageType = "{\"type\":\"packageType\"}";
         messageSize = "{\"type\":\"packageSizeByType\",\"packageType\":\"" + PACKAGE_TYPE + "\"}";
 
-        packageService = new PackageServiceImpl(rabbitTemplate, connectionProperties);
+        packageService = new PackageServiceImpl(centralServerConnectionService);
     }
 
     @Test
@@ -55,22 +57,22 @@ public class PackageServiceImplTest {
     }
 
     @Test
-    public void getDescriptionsForPackageTypesWithMessageReceivedEmpty_ThenThrowPackageServiceException() {
+    public void getDescriptionsForPackageTypesWithMessageReceivedEmpty_ThenThrowResponseIsNullOrEmptyException() {
         String messageReceived = "";
 
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageType)).thenReturn(messageReceived);
 
-        assertThatExceptionOfType(PackageServiceException.class).isThrownBy(
+        assertThatExceptionOfType(ResponseIsNullOrEmptyException.class).isThrownBy(
                 () -> packageService.getDescriptionsForPackageTypes());
     }
 
     @Test
-    public void getDescriptionsForPackageTypesListWithMessageReceivedNull_ThenThrowPackageServiceException() {
+    public void getDescriptionsForPackageTypesListWithMessageReceivedNull_ThenThrowResponseIsNullOrEmptyException() {
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageType)).thenReturn(null);
 
-        assertThatExceptionOfType(PackageServiceException.class).isThrownBy(
+        assertThatExceptionOfType(ResponseIsNullOrEmptyException.class).isThrownBy(
                 () -> packageService.getDescriptionsForPackageTypes());
     }
 
@@ -122,22 +124,22 @@ public class PackageServiceImplTest {
     }
 
     @Test
-    public void getDescriptionsForPackageSizeWithMessageReceivedEmpty_ThenThrowPackageServiceException() {
+    public void getDescriptionsForPackageSizeWithMessageReceivedEmpty_ThenThrowResponseIsNullOrEmptyException() {
         String messageReceived = "";
 
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageSize)).thenReturn(messageReceived);
 
-        assertThatExceptionOfType(PackageServiceException.class).isThrownBy(
+        assertThatExceptionOfType(ResponseIsNullOrEmptyException.class).isThrownBy(
                 () -> packageService.getDescriptionsForPackageSize(PACKAGE_TYPE));
     }
 
     @Test
-    public void getDescriptionsForPackageSizeListWithMessageReceivedNull_ThenThrowPackageServiceException() {
+    public void getDescriptionsForPackageSizeListWithMessageReceivedNull_ThenThrowResponseIsNullOrEmptyException() {
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageSize)).thenReturn(null);
 
-        assertThatExceptionOfType(PackageServiceException.class).isThrownBy(
+        assertThatExceptionOfType(ResponseIsNullOrEmptyException.class).isThrownBy(
                 () -> packageService.getDescriptionsForPackageSize(PACKAGE_TYPE));
     }
 

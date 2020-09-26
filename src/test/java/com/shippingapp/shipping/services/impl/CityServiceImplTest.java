@@ -15,6 +15,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.amqp.core.AmqpTemplate;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -48,7 +49,7 @@ public class CityServiceImplTest {
         messageCity = "{\"type\":\"city\"}";
         messagePath = "{\"type\":\"routesList\",\"origin\":\"Chihuahua\",\"destination\":\"Ciudad de Mexico\"}";
         cityDTO = gson.fromJson(VALID_CITIES, CityDTO.class);
-        cityService = new CityServiceImpl(rabbitTemplate, connectionProperties, optimalPathService);
+        cityService = new CityServiceImpl(centralServerConnectionService, optimalPathService);
     }
 
     @Test

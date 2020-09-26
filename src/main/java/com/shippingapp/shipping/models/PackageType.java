@@ -1,8 +1,9 @@
 package com.shippingapp.shipping.models;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public final class PackageType {
+public final class PackageType implements Serializable {
     private final int id;
     private final String description;
     private final int price;

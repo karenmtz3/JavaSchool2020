@@ -2,8 +2,9 @@ package com.shippingapp.shipping.services.impl;
 
 import com.google.gson.Gson;
 import com.shippingapp.shipping.config.ConnectionProperties;
-import com.shippingapp.shipping.exception.CityServiceException;
+import com.shippingapp.shipping.exception.ResponseIsNullOrEmptyException;
 import com.shippingapp.shipping.models.CityDTO;
+import com.shippingapp.shipping.services.CentralServerConnectionService;
 import com.shippingapp.shipping.services.CityService;
 import com.shippingapp.shipping.services.OptimalPathService;
 import com.shippingapp.shipping.util.MessageLoader;
@@ -14,7 +15,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.amqp.core.AmqpTemplate;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -42,6 +42,7 @@ public class CityServiceImplTest {
     public void setUp() {
         this.rabbitTemplate = Mockito.mock(AmqpTemplate.class);
         this.connectionProperties = Mockito.mock(ConnectionProperties.class);
+        CentralServerConnectionService centralServerConnectionService = new CentralServerConnectionServiceImpl(connectionProperties, rabbitTemplate);
         OptimalPathService optimalPathService = new OptimalPathServiceImpl();
 
         messageCity = "{\"type\":\"city\"}";
@@ -69,22 +70,22 @@ public class CityServiceImplTest {
     }
 
     @Test
-    public void getCityNamesWithMessageReceivedEmpty_thenThrowCityServiceException() {
+    public void getCityNamesWithMessageReceivedEmpty_thenThrowResponseIsNullOrEmptyException() {
         String messageReceived = "";
 
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageCity)).thenReturn(messageReceived);
 
-        assertThatExceptionOfType(CityServiceException.class).isThrownBy(
+        assertThatExceptionOfType(ResponseIsNullOrEmptyException.class).isThrownBy(
                 () -> cityService.getCityNames());
     }
 
     @Test
-    public void getCityNamesWithMessageReceivedNull_thenThrowCityServiceException() {
+    public void getCityNamesWithMessageReceivedNull_thenThrowResponseIsNullOrEmptyException() {
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messageCity)).thenReturn(null);
 
-        assertThatExceptionOfType(CityServiceException.class).isThrownBy(
+        assertThatExceptionOfType(ResponseIsNullOrEmptyException.class).isThrownBy(
                 () -> cityService.getCityNames());
     }
 
@@ -182,22 +183,22 @@ public class CityServiceImplTest {
     }
 
     @Test
-    public void getFirstPathWithMessageReceivedEmpty_thenThrowCityServiceException() {
+    public void getFirstPathWithMessageReceivedEmpty_thenThrowResponseIsNullOrEmptyException() {
         String messageReceived = "";
 
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
 
-        assertThatExceptionOfType(CityServiceException.class).isThrownBy(
+        assertThatExceptionOfType(ResponseIsNullOrEmptyException.class).isThrownBy(
                 () -> cityService.getOptimalPath(cityDTO));
     }
 
     @Test
-    public void getFirstPathWithMessageReceivedNull_thenThrowCityServiceException() {
+    public void getFirstPathWithMessageReceivedNull_thenThrowResponseIsNullOrEmptyException() {
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messagePath)).thenReturn(null);
 
-        assertThatExceptionOfType(CityServiceException.class).isThrownBy(
+        assertThatExceptionOfType(ResponseIsNullOrEmptyException.class).isThrownBy(
                 () -> cityService.getOptimalPath(cityDTO));
     }
 }

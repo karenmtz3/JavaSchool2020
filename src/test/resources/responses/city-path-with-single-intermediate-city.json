@@ -1,0 +1,13 @@
+[
+  {"from":"Chihuahua","to":"Torreon","distance":"50"},
+  {"from":"Torreon","to":"Ciudad de Mexico","distance":"63"},
+  {"from":"Durango","to":"Oaxaca","distance":"78"},
+  {"from":"Chihuahua","to":"Durango","distance":"43"},
+  {"from":"Merida","to":"Ciudad de Mexico","distance":"26"},
+  {"from":"Toluca","to":"Merida","distance":"10"},
+  {"from":"Durango","to":"Ciudad del Carmen","distance":"15"},
+  {"from":"Zacatecas","to":"Ciudad de Mexico","distance":"21"},
+  {"from":"Oaxaca","to":"Tlaxcala","distance":"56"},
+  {"from":"Xapala","to":"Toluca","distance":"30"},
+  {"from":"Chihuahua","to":"Ciudad de Mexico","distance":"120"}
+]

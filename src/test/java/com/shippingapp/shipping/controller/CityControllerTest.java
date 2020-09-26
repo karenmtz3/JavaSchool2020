@@ -123,7 +123,7 @@ public class CityControllerTest {
 
         String path = "Chihuahua -> Oaxaca -> Tampico -> Tuxtla Gutierrez -> Ciudad de Mexico";
         ArgumentCaptor<CityDTO> cityDTOCaptor = ArgumentCaptor.forClass(CityDTO.class);
-        when(cityService.getFirstPath(any(CityDTO.class))).thenReturn(path);
+        when(cityService.getOptimalPath(any(CityDTO.class))).thenReturn(path);
 
         MockHttpServletResponse response = mockMvc.perform(
                 MockMvcRequestBuilders.post("/cityPath")
@@ -131,14 +131,14 @@ public class CityControllerTest {
                         .content(VALID_CITIES)).andReturn().getResponse();
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        verify(cityService).getFirstPath(cityDTOCaptor.capture());
+        verify(cityService).getOptimalPath(cityDTOCaptor.capture());
 
         assertThat(response.getContentAsString()).isEqualTo(path);
     }
 
     @Test
     public void givenInvalidCities_whenGetPathFromOriginCityToDestinationCity_thenReject400Status() throws Exception {
-        when(cityService.getFirstPath(any(CityDTO.class))).thenThrow(
+        when(cityService.getOptimalPath(any(CityDTO.class))).thenThrow(
                 new OriginAndDestinationAreEqualsException("Cities must be different"));
 
         MockHttpServletResponse response = mockMvc.perform(
@@ -151,7 +151,7 @@ public class CityControllerTest {
 
     @Test
     public void whenGetPathFromOriginCityToDestinationCity_thenCentralCommunicationFailsRejectWith417Status() throws Exception {
-        when(cityService.getFirstPath(any(CityDTO.class))).thenThrow(
+        when(cityService.getOptimalPath(any(CityDTO.class))).thenThrow(
                 new CentralServerException());
 
         MockHttpServletResponse response = mockMvc.perform(

@@ -1,12 +1,13 @@
 package com.shippingapp.shipping.services.impl;
 
 import com.google.gson.Gson;
-import com.shippingapp.shipping.component.DfsFindPaths;
 import com.shippingapp.shipping.config.ConnectionProperties;
 import com.shippingapp.shipping.exception.ResponseIsNullOrEmptyException;
 import com.shippingapp.shipping.models.CityDTO;
 import com.shippingapp.shipping.services.CentralServerConnectionService;
 import com.shippingapp.shipping.services.CityService;
+import com.shippingapp.shipping.services.OptimalPathService;
+import com.shippingapp.shipping.util.MessageLoader;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +15,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.amqp.core.AmqpTemplate;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -42,12 +44,12 @@ public class CityServiceImplTest {
         this.rabbitTemplate = Mockito.mock(AmqpTemplate.class);
         this.connectionProperties = Mockito.mock(ConnectionProperties.class);
         CentralServerConnectionService centralServerConnectionService = new CentralServerConnectionServiceImpl(connectionProperties, rabbitTemplate);
-        DfsFindPaths dfsFindPaths = new DfsFindPaths();
+        OptimalPathService optimalPathService = new OptimalPathServiceImpl();
 
         messageCity = "{\"type\":\"city\"}";
         messagePath = "{\"type\":\"routesList\",\"origin\":\"Chihuahua\",\"destination\":\"Ciudad de Mexico\"}";
         cityDTO = gson.fromJson(VALID_CITIES, CityDTO.class);
-        cityService = new CityServiceImpl(centralServerConnectionService, dfsFindPaths);
+        cityService = new CityServiceImpl(centralServerConnectionService, optimalPathService);
     }
 
     @Test
@@ -125,26 +127,58 @@ public class CityServiceImplTest {
     }
 
     @Test
-    public void getFirstPath_SuccessExpected() {
-        String messageReceived = "[{\"from\":\"Guadalajara\",\"to\":\"Villahermosa\",\"distance\":\"58\"}," +
-                "{\"from\":\"Ciudad del Carmen\",\"to\":\"Ciudad de Mexico\",\"distance\":\"30\"}," +
-                "{\"from\":\"Cancun\",\"to\":\"Toluca\",\"distance\":\"28\"}," +
-                "{\"from\":\"Torreon\",\"to\":\"Xalapa\",\"distance\":\"26\"}," +
-                "{\"from\":\"Chihuahua\",\"to\":\"Cancun\",\"distance\":\"70\"}," +
-                "{\"from\":\"Durango\",\"to\":\"Oaxaca\",\"distance\":\"78\"}," +
-                "{\"from\":\"Tlaxcala\",\"to\":\"Ciudad de Mexico\",\"distance\":\"23\"}," +
-                "{\"from\":\"Tlaxcala\",\"to\":\"Zacatecas\",\"distance\":\"79\"}," +
-                "{\"from\":\"Merida\",\"to\":\"Ciudad de Mexico\",\"distance\":\"26\"}," +
-                "{\"from\":\"San Luis Potosi\",\"to\":\"Ciudad de Mexico\",\"distance\":\"94\"}," +
-                "{\"from\":\"Acapulco\",\"to\":\"Ciudad de Mexico\",\"distance\":\"72\"}," +
-                "{\"from\":\"Toluca\",\"to\":\"Tlaxcala\",\"distance\":\"97\"}]";
+    public void getOptimalPathWithoutIntermediateCities_SuccessExpected() throws IOException {
+        String messageReceived = MessageLoader.loadExampleResponse("responses/city-path-without-intermediate-cities.json");
 
-        String pathExpected = "Chihuahua -> Cancun -> Toluca -> Tlaxcala -> Ciudad de Mexico";
+        String pathExpected = "Chihuahua -> Ciudad de Mexico";
 
         when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
                 connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
 
-        String response = cityService.getFirstPath(cityDTO);
+        String response = cityService.getOptimalPath(cityDTO);
+
+        assertThat(response).isEqualTo(pathExpected);
+    }
+
+    @Test
+    public void getOptimalPathWithSingleIntermediateCity_SuccessExpected() throws IOException {
+        String messageReceived = MessageLoader.loadExampleResponse("responses/city-path-with-single-intermediate-city.json");
+
+        String pathExpected = "Chihuahua -> Torreon -> Ciudad de Mexico";
+
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
+
+        String response = cityService.getOptimalPath(cityDTO);
+
+        assertThat(response).isEqualTo(pathExpected);
+    }
+
+    @Test
+    public void getOptimalPathWithTwoIntermediateCities_SuccessExpected() throws IOException {
+        String messageReceived = MessageLoader.loadExampleResponse("responses/city-path-with-two-intermediate-cities.json");
+
+
+        String pathExpected = "Chihuahua -> Durango -> Ciudad del Carmen -> Ciudad de Mexico";
+
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
+
+        String response = cityService.getOptimalPath(cityDTO);
+
+        assertThat(response).isEqualTo(pathExpected);
+    }
+
+    @Test
+    public void getOptimalPathWithThreeIntermediateCities_SuccessExpected() throws IOException {
+        String messageReceived = MessageLoader.loadExampleResponse("responses/city-path-with-three-intermediate-cities.json");
+
+        String pathExpected = "Chihuahua -> Cancun -> Toluca -> Merida -> Ciudad de Mexico";
+
+        when(rabbitTemplate.convertSendAndReceive(connectionProperties.getExchange(),
+                connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
+
+        String response = cityService.getOptimalPath(cityDTO);
 
         assertThat(response).isEqualTo(pathExpected);
     }
@@ -157,7 +191,7 @@ public class CityServiceImplTest {
                 connectionProperties.getRoutingKey(), messagePath)).thenReturn(messageReceived);
 
         assertThatExceptionOfType(ResponseIsNullOrEmptyException.class).isThrownBy(
-                () -> cityService.getFirstPath(cityDTO));
+                () -> cityService.getOptimalPath(cityDTO));
     }
 
     @Test
@@ -166,6 +200,6 @@ public class CityServiceImplTest {
                 connectionProperties.getRoutingKey(), messagePath)).thenReturn(null);
 
         assertThatExceptionOfType(ResponseIsNullOrEmptyException.class).isThrownBy(
-                () -> cityService.getFirstPath(cityDTO));
+                () -> cityService.getOptimalPath(cityDTO));
     }
 }

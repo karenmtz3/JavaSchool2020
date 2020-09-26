@@ -2,13 +2,13 @@ package com.shippingapp.shipping.services.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
-import com.shippingapp.shipping.component.DfsFindPaths;
 import com.shippingapp.shipping.exception.OriginAndDestinationAreEqualsException;
 import com.shippingapp.shipping.models.City;
 import com.shippingapp.shipping.models.CityDTO;
 import com.shippingapp.shipping.models.CityPath;
 import com.shippingapp.shipping.services.CentralServerConnectionService;
 import com.shippingapp.shipping.services.CityService;
+import com.shippingapp.shipping.services.OptimalPathService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -33,12 +33,12 @@ public class CityServiceImpl implements CityService {
     }.getType();
 
     private final CentralServerConnectionService centralServerConnectionService;
-    private final DfsFindPaths dfsFindPaths;
+    private final OptimalPathService optimalPathService;
     private static final Gson gson = new Gson();
 
-    public CityServiceImpl(CentralServerConnectionService centralServerConnectionService, DfsFindPaths dfsFindPaths) {
+    public CityServiceImpl(CentralServerConnectionService centralServerConnectionService, OptimalPathService optimalPathService) {
         this.centralServerConnectionService = centralServerConnectionService;
-        this.dfsFindPaths = dfsFindPaths;
+        this.optimalPathService = optimalPathService;
     }
 
     public List<String> getCityNames() {
@@ -58,7 +58,7 @@ public class CityServiceImpl implements CityService {
                 .collect(Collectors.toList());
     }
 
-    public String getFirstPath(CityDTO cityDTO) {
+    public String getOptimalPath(CityDTO cityDTO) {
         if (!cityDTO.getOrigin().equals(cityDTO.getDestination())) {
             String message = String.format(MESSAGE_CITY_PATH,
                     cityDTO.getOrigin(), cityDTO.getDestination());
@@ -66,7 +66,7 @@ public class CityServiceImpl implements CityService {
             String messageResponse = centralServerConnectionService.sendRequestAndReceiveResponse(message);
             List<CityPath> cityPaths = gson.fromJson(messageResponse, CITY_PATH_REFERENCE);
 
-            return dfsFindPaths.getFirstPathFromOriginToDestination(cityPaths, cityDTO.getOrigin(), cityDTO.getDestination());
+            return optimalPathService.getOptimalPathBetweenTwoCities(cityPaths, cityDTO.getOrigin(), cityDTO.getDestination());
         }
         throw new OriginAndDestinationAreEqualsException("Cities must be different");
     }

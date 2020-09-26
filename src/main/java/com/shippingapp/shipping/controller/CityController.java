@@ -24,6 +24,6 @@ public class CityController {
 
     @PostMapping("/cityPath")
     public ResponseEntity<String> getPathFromOriginCityToDestinationCity(@RequestBody CityDTO cityDTO) {
-        return new ResponseEntity<>(cityService.getFirstPath(cityDTO), HttpStatus.OK);
+        return new ResponseEntity<>(cityService.getOptimalPath(cityDTO), HttpStatus.OK);
     }
 }
